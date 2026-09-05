@@ -1,0 +1,45 @@
+backend:
+  name: git-gateway
+  branch: main
+publish_mode: editorial_workflow
+
+media_library:
+  name: cloudinary
+  config:
+    cloud_name: "zphg9gin"
+    api_key: "934611598668341"
+
+collections:
+  - name: "products"
+    label: "Wholesale Products"
+    folder: "content/products"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Product Name", name: "title", widget: "string" }
+      - { label: "SKU", name: "sku", widget: "string" }
+      - { label: "Wholesale Price (₹)", name: "price", widget: "number" }
+      - {
+          label: "Minimum Order Quantity (MOQ)",
+          name: "moq",
+          widget: "number",
+          default: 10,
+        }
+      - { label: "Base Garment Image", name: "image", widget: "image" }
+      - {
+          label: "AI Try-On Image",
+          name: "ai_image",
+          widget: "ai_generator",
+          required: false,
+        }
+      - label: "Color Variants"
+        name: "color_variants"
+        widget: "list"
+        required: false
+        fields:
+          - { label: "Color Name", name: "color_name", widget: "string" }
+          - {
+              label: "Upload Fabric Swatch Photo",
+              name: "hex_code",
+              widget: "color_extractor",
+            }

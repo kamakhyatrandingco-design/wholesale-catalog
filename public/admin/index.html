@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wholesale Admin Portal</title>
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
+  </head>
+  <body>
+    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    <script>
+      var AITryOnControl = createClass({
+        getInitialState: function() { return { loading: false, imageUrl: this.props.value || '' }; },
+        handleGenerate: async function() {
+          this.setState({ loading: true });
+          try {
+            const res = await fetch('/api/ai-tryon', { method: 'POST' });
+            const data = await res.json();
+            if(data.imageUrl) {
+              this.setState({ imageUrl: data.imageUrl, loading: false });
+              this.props.onChange(data.imageUrl); 
+            }
+          } catch (e) {
+            alert("AI Generation failed. Check API limit.");
+            this.setState({ loading: false });
+          }
+        },
+        render: function() {
+          return h('div', { style: { padding: '15px', border: '1px solid #ccc', borderRadius: '5px', background: '#f9f9f9' } },
+            this.state.imageUrl ? h('img', { src: this.state.imageUrl, style: { width: '150px', marginBottom: '10px' } }) : null,
+            h('button', { onClick: this.handleGenerate, type: 'button', style: { padding: '8px 16px', background: '#000', color: '#fff', border: 'none', cursor: 'pointer' } }, 
+              this.state.loading ? '⏳ Dressing Model (Wait 15s)...' : '✨ Generate AI Model Image')
+          );
+        }
+      });
+      CMS.registerWidget('ai_generator', AITryOnControl);
+
+      var ColorExtractorControl = createClass({
+        getInitialState: function() { return { hex: this.props.value || '', preview: '' }; },
+        handleImageUpload: function(e) {
+          const file = e.target.files[0];
+          if(!file) return;
+          const url = URL.createObjectURL(file);
+          this.setState({ preview: url });
+          
+          const img = new Image();
+          img.src = url;
+          img.crossOrigin = 'Anonymous';
+          img.onload = () => {
+            const colorThief = new ColorThief();
+            const rgb = colorThief.getColor(img);
+            const hex = '#' + rgb.map(x => x.toString(16).padStart(2, '0')).join('');
+            this.setState({ hex: hex });
+            this.props.onChange(hex); 
+          }
+        },
+        render: function() {
+          return h('div', { style: { padding: '10px', border: '1px solid #ddd' } },
+            h('p', {style: {marginBottom: '5px', fontWeight: 'bold'}}, "Upload physical fabric swatch:"),
+            h('input', { type: 'file', accept: 'image/*', onChange: this.handleImageUpload, style: { marginBottom: '10px' } }),
+            this.state.preview ? h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } }, 
+              h('div', { style: { width: '40px', height: '40px', backgroundColor: this.state.hex, borderRadius: '4px', border: '1px solid #000' } }),
+              h('span', null, 'Extracted Color: ' + this.state.hex)
+            ) : null
+          );
+        }
+      });
+      CMS.registerWidget('color_extractor', ColorExtractorControl);
+
+      CMS.init();
+    </script>
+  </body>
+</html>
