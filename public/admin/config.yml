@@ -8,30 +8,53 @@ public_folder: "/images"
 
 collections:
   - name: "products"
-    label: "Wholesale Products"
+    label: "Apparel Catalog"
     folder: "content/products"
     create: true
     slug: "{{slug}}"
     fields:
-      - { label: "Product Name", name: "title", widget: "string" }
+      - { label: "Product Title", name: "title", widget: "string" }
       - { label: "SKU", name: "sku", widget: "string" }
-      - { label: "Wholesale Price (₹)", name: "price", widget: "number" }
+      - {
+          label: "Category",
+          name: "category",
+          widget: "select",
+          options:
+            [
+              "Ethnic Wear",
+              "Western Wear",
+              "Girls Partywear",
+              "Bridal",
+              "Loungewear",
+            ],
+        }
+      - {
+          label: "Retail Price (Single Piece ₹)",
+          name: "retail_price",
+          widget: "number",
+        }
+      - {
+          label: "Wholesale Price (Bulk ₹)",
+          name: "wholesale_price",
+          widget: "number",
+        }
       - {
           label: "Minimum Order Quantity (MOQ)",
           name: "moq",
           widget: "number",
-          default: 10,
+          default: 5,
         }
       - {
-          label: "Base Garment Image",
+          label: "Sizes Available",
+          name: "sizes",
+          widget: "select",
+          multiple: true,
+          options: ["XS", "S", "M", "L", "XL", "XXL", "Free Size"],
+        }
+      - {
+          label: "Product Image",
           name: "image",
           widget: "image",
-          required: false,
-        }
-      - {
-          label: "AI Try-On Image URL",
-          name: "ai_image",
-          widget: "string",
           required: false,
         }
       - label: "Color Variants"
