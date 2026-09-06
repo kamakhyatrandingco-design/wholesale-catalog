@@ -2,7 +2,9 @@ backend:
   name: github
   repo: kamakhyatrandingco-design/wholesale-catalog
   branch: main
-  base_url: "https://wholesale-catalog-ktc8.vercel.app/api"
+  base_url: "https://wholesale-catalog-ktc8.vercel.app"
+  auth_endpoint: "api/auth"
+
 publish_mode: editorial_workflow
 
 media_library:
@@ -21,27 +23,13 @@ collections:
       - { label: "Product Name", name: "title", widget: "string" }
       - { label: "SKU", name: "sku", widget: "string" }
       - { label: "Wholesale Price (₹)", name: "price", widget: "number" }
-      - {
-          label: "Minimum Order Quantity (MOQ)",
-          name: "moq",
-          widget: "number",
-          default: 10,
-        }
+      - { label: "Minimum Order Quantity (MOQ)", name: "moq", widget: "number", default: 10 }
       - { label: "Base Garment Image", name: "image", widget: "image" }
-      - {
-          label: "AI Try-On Image",
-          name: "ai_image",
-          widget: "ai_generator",
-          required: false,
-        }
+      - { label: "AI Try-On Image URL", name: "ai_image", widget: "string", required: false }
       - label: "Color Variants"
         name: "color_variants"
         widget: "list"
         required: false
         fields:
           - { label: "Color Name", name: "color_name", widget: "string" }
-          - {
-              label: "Upload Fabric Swatch Photo",
-              name: "hex_code",
-              widget: "color_extractor",
-            }
+          - { label: "Hex Code (e.g. #FF0000)", name: "hex_code", widget: "string" }
