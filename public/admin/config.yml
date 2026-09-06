@@ -1,6 +1,8 @@
 backend:
-  name: git-gateway
+  name: github
+  repo: kamakhyatrandingco-design/wholesale-catalog
   branch: main
+  base_url: "https://wholesale-catalog-ktc8.vercel.app/api"
 publish_mode: editorial_workflow
 
 media_library:
