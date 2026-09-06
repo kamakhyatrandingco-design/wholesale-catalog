@@ -1,119 +1,200 @@
 'use client';
-import { useState, useEffect } from 'react';
-import WhatsAppButton from './components/WhatsAppButton';
+import { useState } from 'react';
 
-function ProductCard({ product }) {
-  const [activeImg, setActiveImg] = useState(product.image);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
+// PREDEFINED PREMIUM MOCK DATA
+// Once you add real products in the CMS, you will map over those instead of these.
+const mockProducts = [
+  {
+    id: 1,
+    title: "Premium Heavyweight Oversized Tee",
+    sku: "TSHIRT-BLK-001",
+    price: 499,
+    moq: 50,
+    // Using a grayscale image makes the CSS color-blend trick look incredibly realistic
+    image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=800", 
+    colors: [
+      { name: "Arctic White", hex: "#FFFFFF" },
+      { name: "Midnight Black", hex: "#222222" },
+      { name: "Olive Drab", hex: "#4B5320" },
+      { name: "Dusty Rose", hex: "#DCAE96" }
+    ]
+  },
+  {
+    id: 2,
+    title: "Luxury Drop-Shoulder Hoodie",
+    sku: "HOODIE-LUX-099",
+    price: 1150,
+    moq: 30,
+    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800",
+    colors: [
+      { name: "Stone Grey", hex: "#888B8D" },
+      { name: "Navy Blue", hex: "#000080" }
+    ]
+  },
+  {
+    id: 3,
+    title: "Classic Denim Trucker Jacket",
+    sku: "JCKT-DNM-404",
+    price: 850,
+    moq: 20,
+    image: "https://images.unsplash.com/photo-1495105787522-5334e3ffa0efa?auto=format&fit=crop&q=80&w=800",
+    colors: [
+      { name: "Vintage Wash", hex: "#759CB9" },
+      { name: "Charcoal", hex: "#36454F" }
+    ]
+  },
+  {
+    id: 4,
+    title: "Textured Knit Polo Shirt",
+    sku: "POLO-KNT-777",
+    price: 550,
+    moq: 100,
+    image: "https://images.unsplash.com/photo-1626497764746-6dc36546b388?auto=format&fit=crop&q=80&w=800",
+    colors: [
+      { name: "Cream", hex: "#FFFDD0" },
+      { name: "Burgundy", hex: "#800020" },
+      { name: "Forest Green", hex: "#228B22" }
+    ]
+  }
+];
 
-  const getRecoloredImage = (baseUrl, hexCode) => {
-    if (!hexCode || !baseUrl.includes('cloudinary')) return baseUrl;
-    const cleanHex = hexCode.replace('#', '');
-    return baseUrl.replace('/upload/', `/upload/e_gen_recolor:prompt_clothing;to-color_${cleanHex}/`);
-  };
+export default function Storefront() {
+  // Keeps track of which color is selected for which product ID
+  const [selectedColors, setSelectedColors] = useState({});
 
-  const handleColorChange = (hexCode) => {
-    setIsLoading(true);
-    setHasError(false);
-    setActiveImg(getRecoloredImage(product.image, hexCode));
+  // Fixed WhatsApp Logic
+  const handleWhatsAppOrder = (product, color) => {
+    // ⚠️ REPLACE THIS WITH YOUR ACTUAL WHATSAPP NUMBER (include country code, no +)
+    const phoneNumber = "916350626582"; 
+    
+    const message = `Hi! I am interested in placing a wholesale order.\n\n*Product:* ${product.title}\n*SKU:* ${product.sku}\n*Color:* ${color.name}\n*Price:* ₹${product.price}/pc\n*MOQ:* ${product.moq} pieces\n\nPlease let me know the total estimate and shipping details.`;
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    
+    // Opens WhatsApp in a new tab instantly
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
-    <div className="border border-gray-200 rounded-2xl p-5 shadow-lg bg-white hover:shadow-xl transition-shadow duration-300">
-      <div className="relative w-full h-[400px] mb-6 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
-        {isLoading && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
-            <div className="w-10 h-10 border-4 border-gray-200 border-t-black rounded-full animate-spin mb-3"></div>
-            <p className="text-sm font-semibold text-gray-700 animate-pulse">Applying AI Color...</p>
-          </div>
-        )}
-        <img 
-          src={hasError ? product.image : activeImg} 
-          alt={product.title} 
-          className={`w-full h-full object-cover transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-          onLoad={() => setIsLoading(false)}
-          onError={() => { setIsLoading(false); setHasError(true); }}
-        />
-      </div>
+    <div className="min-h-screen bg-[#F9FAFB] font-sans text-gray-900">
       
-      {product.color_variants && (
-        <div className="mb-5">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Available Colors</p>
-          <div className="flex gap-3">
-            {product.color_variants.map(variant => (
-              <button 
-                key={variant.color_name} 
-                onClick={() => handleColorChange(variant.hex_code)}
-                className={`w-10 h-10 rounded-full border-2 shadow-sm transition-transform hover:scale-110 focus:outline-none`}
-                style={{ backgroundColor: variant.hex_code || '#f3f4f6', borderColor: '#e5e7eb' }}
-                title={variant.color_name}
-              />
-            ))}
-          </div>
+      {/* LUXURY HERO SECTION */}
+      <div className="relative bg-black text-white py-24 px-6 sm:px-12 lg:px-24 overflow-hidden">
+        <div className="absolute inset-0 opacity-40">
+          <img 
+            src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=2000" 
+            alt="Fashion Background" 
+            className="w-full h-full object-cover"
+          />
         </div>
-      )}
-
-      <h2 className="text-2xl font-bold text-gray-900 mb-1">{product.title}</h2>
-      <p className="text-sm text-gray-500 mb-4 font-medium">SKU: {product.sku}</p>
-      <div className="flex justify-between items-center mb-6 p-3 bg-gray-50 border border-gray-100 rounded-lg">
-        <span className="font-extrabold text-2xl text-gray-900">₹{product.price}<span className="text-sm font-normal text-gray-500">/pc</span></span>
-        <span className="text-sm font-bold text-red-600 bg-red-50 px-2 py-1 rounded">MOQ: {product.moq} Sets</span>
-      </div>
-      <WhatsAppButton title={product.title} sku={product.sku} moq={product.moq} />
-    </div>
-  );
-}
-
-export default function Catalog() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadProducts() {
-      try {
-        const res = await fetch('/api/products');
-        if (res.ok) {
-          const data = await res.json();
-          setProducts(data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch products", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadProducts();
-  }, []);
-
-  return (
-    <main className="min-h-screen bg-slate-50 text-gray-900 py-12 px-6">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-12 text-center">
-          <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 mb-3">
-            {process.env.NEXT_PUBLIC_SHOP_NAME || "Wholesale Portal"}
+        <div className="relative z-10 max-w-5xl mx-auto text-center">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 uppercase">
+            Elevate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-white">Inventory</span>
           </h1>
-          <p className="text-lg text-gray-500 font-medium">Exclusive B2B Catalog & Ordering</p>
-        </header>
-
-        {loading ? (
-          <div className="flex flex-col items-center justify-center h-64">
-            <div className="w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
-            <p className="mt-4 text-gray-500 font-semibold">Loading Catalog...</p>
-          </div>
-        ) : products.length === 0 ? (
-          <div className="text-center text-gray-500 font-semibold h-64 flex flex-col justify-center items-center">
-            <p className="text-2xl mb-2 text-gray-800">Your catalog is currently empty.</p>
-            <p className="text-md">Log into the Admin portal (`/admin/index.html`) to add your first product!</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {products.map((product, index) => (
-              <ProductCard key={index} product={product} />
-            ))}
-          </div>
-        )}
+          <p className="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto font-light">
+            Premium B2B wholesale apparel. Direct from the manufacturer. Uncompromising quality, unbeatable margins.
+          </p>
+        </div>
       </div>
-    </main>
+
+      {/* FILTERS / CATEGORIES (Placeholder for future) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6 border-b border-gray-200">
+        <div className="flex space-x-8 overflow-x-auto pb-4 scrollbar-hide text-sm font-medium text-gray-500 uppercase tracking-widest">
+          <button className="text-black border-b-2 border-black pb-1 whitespace-nowrap">All Collection</button>
+          <button className="hover:text-black transition-colors whitespace-nowrap">Oversized Fits</button>
+          <button className="hover:text-black transition-colors whitespace-nowrap">Winter Wear</button>
+          <button className="hover:text-black transition-colors whitespace-nowrap">Premium Knits</button>
+        </div>
+      </div>
+
+      {/* PRODUCT GRID */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16">
+          
+          {mockProducts.map((product) => {
+            const activeColorIndex = selectedColors[product.id] || 0;
+            const activeColor = product.colors[activeColorIndex];
+
+            return (
+              <div key={product.id} className="group relative flex flex-col bg-white rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100">
+                
+                {/* IMAGE CONTAINER WITH INSTANT COLOR TINT TRICK */}
+                <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden">
+                  {/* Badge */}
+                  <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-sm shadow-sm">
+                    MOQ: {product.moq}
+                  </div>
+                  
+                  {/* Base Image */}
+                  <img 
+                    src={product.image} 
+                    alt={product.title}
+                    className="absolute inset-0 w-full h-full object-cover z-0 group-hover:scale-105 transition-transform duration-700 ease-in-out"
+                  />
+                  
+                  {/* The "Magic" Instant Colorizer Overlay */}
+                  {/* This uses CSS blend modes to dye the fabric instantly based on the hex code */}
+                  <div 
+                    className="absolute inset-0 z-10 transition-colors duration-300 mix-blend-multiply opacity-80"
+                    style={{ backgroundColor: activeColor.hex === '#FFFFFF' ? 'transparent' : activeColor.hex }}
+                  />
+                </div>
+
+                {/* PRODUCT DETAILS */}
+                <div className="p-6 flex flex-col flex-grow">
+                  
+                  {/* Swatches */}
+                  <div className="mb-4">
+                    <p className="text-xs text-gray-400 font-semibold tracking-wider uppercase mb-3">
+                      {product.colors.length} Colors Available
+                    </p>
+                    <div className="flex space-x-2">
+                      {product.colors.map((color, idx) => (
+                        <button
+                          key={color.name}
+                          onClick={() => setSelectedColors({ ...selectedColors, [product.id]: idx })}
+                          className={`w-7 h-7 rounded-full border-2 transition-all ${
+                            activeColorIndex === idx 
+                              ? 'border-black scale-110 shadow-md' 
+                              : 'border-gray-200 hover:border-gray-400'
+                          }`}
+                          style={{ backgroundColor: color.hex }}
+                          title={color.name}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <h3 className="text-lg font-bold text-gray-900 leading-tight mb-2 line-clamp-2">
+                    {product.title}
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-4">{product.sku}</p>
+                  
+                  <div className="mt-auto flex items-end justify-between mb-6">
+                    <div>
+                      <span className="text-2xl font-black text-gray-900">₹{product.price}</span>
+                      <span className="text-sm text-gray-500 ml-1">/ pc</span>
+                    </div>
+                  </div>
+
+                  {/* FIXED WHATSAPP BUTTON */}
+                  <button 
+                    onClick={() => handleWhatsAppOrder(product, activeColor)}
+                    className="w-full bg-[#25D366] hover:bg-[#1EBE5A] text-white font-bold py-3.5 px-4 rounded-xl transition-colors duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-green-500/30"
+                  >
+                    {/* Inline SVG for WhatsApp Icon */}
+                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                    </svg>
+                    <span>Order on WhatsApp</span>
+                  </button>
+
+                </div>
+              </div>
+            );
+          })}
+          
+        </div>
+      </div>
+    </div>
   );
 }
