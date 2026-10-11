@@ -1,8 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useSyncExternalStore } from 'react';
 
 const OWNER_PHONE = "916350626582";
+
+function subscribeBuyer(callback) {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
+
+function getBuyerSnapshot() {
+  if (typeof window === 'undefined') return '';
+  try {
+    return localStorage.getItem('ktc_buyer_user') || '';
+  } catch {
+    return '';
+  }
+}
+
+function getRestockSnapshot() {
+  if (typeof window === 'undefined') return '[]';
+  try {
+    return localStorage.getItem('ktc_restock_requests') || '[]';
+  } catch {
+    return '[]';
+  }
+}
 
 export default function UserAuthModal({
   isOpen,
@@ -10,8 +34,24 @@ export default function UserAuthModal({
   products = [],
   initialRestockProduct = null
 }) {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('login'); // 'login' | 'restock' | 'contact'
+  const buyerRaw = useSyncExternalStore(subscribeBuyer, getBuyerSnapshot, () => '');
+  const restockRaw = useSyncExternalStore(subscribeBuyer, getRestockSnapshot, () => '[]');
+
+  const savedUser = useMemo(() => {
+    if (!buyerRaw) return null;
+    try {
+      return JSON.parse(buyerRaw);
+    } catch {
+      return null;
+    }
+  }, [buyerRaw]);
+
+  const [localUser, setLocalUser] = useState(undefined);
+  const currentUser = localUser !== undefined ? localUser : savedUser;
+
+  const [tabOverride, setTabOverride] = useState(null);
+  const activeTab = tabOverride || (currentUser ? 'restock' : 'login');
+  const setActiveTab = setTabOverride;
 
   // Login form state
   const [buyerName, setBuyerName] = useState('');
@@ -25,34 +65,26 @@ export default function UserAuthModal({
   const [preferredColor, setPreferredColor] = useState('All Running Colors');
   const [notes, setNotes] = useState('');
   const [restockSuccess, setRestockSuccess] = useState(false);
-  const [savedRequests, setSavedRequests] = useState([]);
 
-  // Check saved buyer session
-  useEffect(() => {
+  const [localRequests, setLocalRequests] = useState(null);
+  const savedRequests = useMemo(() => {
+    if (localRequests) return localRequests;
     try {
-      const saved = localStorage.getItem('ktc_buyer_user');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setCurrentUser(parsed);
-        setBuyerName(parsed.name || '');
-        setShopName(parsed.shop || '');
-        setPhone(parsed.phone || '');
-        setCity(parsed.city || '');
-        setActiveTab('restock');
-      }
-      const reqs = localStorage.getItem('ktc_restock_requests');
-      if (reqs) {
-        setSavedRequests(JSON.parse(reqs));
-      }
-    } catch {}
-  }, []);
+      return JSON.parse(restockRaw) || [];
+    } catch {
+      return [];
+    }
+  }, [localRequests, restockRaw]);
 
-  useEffect(() => {
+  // Sync initialRestockProduct if changed externally
+  const [prevRestockProduct, setPrevRestockProduct] = useState(initialRestockProduct);
+  if (initialRestockProduct !== prevRestockProduct) {
+    setPrevRestockProduct(initialRestockProduct);
     if (initialRestockProduct) {
       setSelectedSku(initialRestockProduct.sku);
-      setActiveTab('restock');
+      setTabOverride('restock');
     }
-  }, [initialRestockProduct]);
+  }
 
   if (!isOpen) return null;
 
@@ -70,14 +102,20 @@ export default function UserAuthModal({
       city: city || 'India',
       registeredAt: new Date().toISOString()
     };
-    setCurrentUser(user);
-    localStorage.setItem('ktc_buyer_user', JSON.stringify(user));
+    setLocalUser(user);
+    try {
+      localStorage.setItem('ktc_buyer_user', JSON.stringify(user));
+      window.dispatchEvent(new Event('storage'));
+    } catch {}
     setActiveTab('restock');
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('ktc_buyer_user');
-    setCurrentUser(null);
+    try {
+      localStorage.removeItem('ktc_buyer_user');
+      window.dispatchEvent(new Event('storage'));
+    } catch {}
+    setLocalUser(null);
     setActiveTab('login');
   };
 
@@ -101,8 +139,11 @@ export default function UserAuthModal({
     };
 
     const updated = [newRequest, ...savedRequests];
-    setSavedRequests(updated);
-    localStorage.setItem('ktc_restock_requests', JSON.stringify(updated));
+    setLocalRequests(updated);
+    try {
+      localStorage.setItem('ktc_restock_requests', JSON.stringify(updated));
+      window.dispatchEvent(new Event('storage'));
+    } catch {}
     setRestockSuccess(true);
 
     // Direct WhatsApp message to factory owner
