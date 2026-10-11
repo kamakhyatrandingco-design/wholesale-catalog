@@ -9,6 +9,19 @@ A high-performance B2B Wholesale Apparel Storefront and Admin Management Portal 
 
 ---
 
+## 🌐 Live Deployments
+
+The application is configured to run on both **Vercel** and **Netlify**:
+
+| Platform | Deployment URL | Status | Environment |
+|---|---|---|---|
+| **Vercel** | [wholesale-catalog-ktc8.vercel.app](https://wholesale-catalog-ktc8.vercel.app) | 🟢 **Live & Active** | Next.js 16 Edge / Serverless |
+| **Netlify** | [ktcfashion.netlify.app](https://ktcfashion.netlify.app) | 🚀 **Production Configured** | Automated via `netlify.toml` |
+
+> **Note on GitHub About Section:** GitHub repositories only have a single "Website" input field in their metadata sidebar. To represent both platforms, both live deployment URLs are documented here in the README and can be added to the repository's description.
+
+---
+
 ## 🌟 Key Features
 
 ### 🛍️ Dual-Mode Storefront
