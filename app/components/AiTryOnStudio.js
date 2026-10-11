@@ -584,14 +584,6 @@ export default function AiTryOnStudio({
                     className="absolute inset-0 w-full h-full object-cover"
                   />
 
-                  {/* Dynamic Color Tint Overlay on Model */}
-                  {activeColorTint.hex && (
-                    <div
-                      className="absolute inset-0 mix-blend-multiply opacity-60 pointer-events-none transition-colors duration-300"
-                      style={{ backgroundColor: activeColorTint.hex }}
-                    />
-                  )}
-
                   <div className="absolute top-3 right-3 bg-purple-900/90 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-0.5 rounded shadow border border-purple-400/40">
                     ✨ AI On-Model Drape ({selectedModel.name})
                   </div>

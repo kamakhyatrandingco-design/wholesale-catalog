@@ -397,13 +397,10 @@ export default function AdminPortal() {
                   type="password"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
-                  placeholder="Default PIN: 635062"
+                  placeholder="Enter Admin PIN / Password"
                   className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
                   required
                 />
-                <span className="text-[11px] text-neutral-500 mt-1 block">
-                  Default Store PIN: <code className="text-emerald-400">635062</code> or <code className="text-emerald-400">kamakhya2026</code>
-                </span>
               </div>
 
               {loginError && (
@@ -426,7 +423,7 @@ export default function AdminPortal() {
                   onClick={() => setIsForgotMode(true)}
                   className="text-neutral-400 hover:text-white underline"
                 >
-                  Forgot PIN? Reset via Phone OTP
+                  Forgot Key? Reset via WhatsApp OTP
                 </button>
                 <a href="/" className="text-neutral-400 hover:text-white">
                   ← Back to Storefront
@@ -437,49 +434,58 @@ export default function AdminPortal() {
             /* PHONE NUMBER OTP RESET FORM */
             <div className="space-y-4">
               <div className="p-3.5 bg-neutral-800/80 rounded-2xl border border-neutral-700 text-xs text-neutral-300">
-                <span className="font-bold text-white block mb-1">📱 Phone Number Verification:</span>
-                Reset instructions will be verified against registered business mobile: <b>{OWNER_PHONE}</b>.
+                <span className="font-bold text-white block mb-1">📱 WhatsApp Security Verification:</span>
+                Reset OTP is delivered to registered store owner WhatsApp: <b>{OWNER_PHONE}</b>.
               </div>
 
               {!otpSent ? (
                 <div className="space-y-3">
                   <div>
                     <label className="text-xs font-bold text-neutral-300 block mb-1">
-                      Registered Owner Phone:
+                      Confirm Registered Owner Phone:
                     </label>
                     <input
                       type="text"
                       value={recoveryPhone}
                       onChange={(e) => setRecoveryPhone(e.target.value)}
-                      className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+                      className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none font-mono"
                     />
                   </div>
 
                   <button
-                    onClick={handleRequestOtp}
+                    onClick={async () => {
+                      await handleRequestOtp();
+                    }}
                     disabled={isRequestingOtp}
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-black py-2.5 rounded-xl text-xs transition-colors"
+                    className="w-full bg-[#25D366] hover:bg-[#1EBE5A] text-white font-black py-2.5 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-md"
                   >
-                    {isRequestingOtp ? 'Sending OTP...' : 'Send Verification OTP'}
+                    <span>📲</span>
+                    <span>{isRequestingOtp ? 'Dispatching OTP...' : 'Send OTP to WhatsApp (+91 63506 26582)'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotMode(false)}
+                    className="w-full text-center text-xs text-neutral-400 hover:text-white py-1"
+                  >
+                    Cancel & Return to Login
                   </button>
                 </div>
               ) : (
                 <form onSubmit={handleVerifyOtpAndReset} className="space-y-3">
                   <div className="p-3 bg-emerald-950/60 border border-emerald-700 text-emerald-300 text-xs rounded-xl">
-                    <p>{otpMessage}</p>
-                    {demoOtpCode && (
-                      <p className="mt-1 font-bold">
-                        Verification Code: <span className="bg-emerald-900 px-2 py-0.5 rounded text-white text-sm">{demoOtpCode}</span>
-                      </p>
-                    )}
+                    <p className="font-bold">✓ {otpMessage || 'OTP Sent to WhatsApp'}</p>
+                    <p className="text-[11px] text-emerald-400/90 mt-1">
+                      Check WhatsApp on +91 63506 26582 for your 6-digit verification code.
+                    </p>
                     {whatsappOtpLink && (
                       <a
                         href={whatsappOtpLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-block mt-2 text-emerald-400 underline font-bold"
+                        className="inline-block mt-2 px-3 py-1 bg-[#25D366] text-white rounded-lg text-xs font-bold hover:bg-[#1EBE5A]"
                       >
-                        Click to Send OTP to Owner's WhatsApp
+                        Open WhatsApp to View / Send OTP Code
                       </a>
                     )}
                   </div>

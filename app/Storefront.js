@@ -3,6 +3,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import AiTryOnStudio from './components/AiTryOnStudio';
 import BoutiqueRoiCalculator from './components/BoutiqueRoiCalculator';
+import AiChatbot from './components/AiChatbot';
+import UserAuthModal from './components/UserAuthModal';
+import NewUserGuide from './components/NewUserGuide';
 
 const WHATSAPP_NUMBER = "916350626582";
 const SHOP_NAME = "Kamakhya Trading Co";
@@ -41,6 +44,11 @@ export default function Storefront({ products = [] }) {
 
   // Boutique ROI / Margin Calculator Modal
   const [isRoiModalOpen, setIsRoiModalOpen] = useState(false);
+
+  // Buyer Guide & User Auth / Restock Modals
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [restockProduct, setRestockProduct] = useState(null);
 
   // Voice Search State
   const [isVoiceListening, setIsVoiceListening] = useState(false);
@@ -151,12 +159,16 @@ export default function Storefront({ products = [] }) {
     return filtered;
   }, [products, searchQuery, activeCategory, purchaseMode, sortBy]);
 
-  // Helper to get image source for product
-  const getProductImage = (product, isAi) => {
+  // Helper to get image source for product (supporting specific color variant images)
+  const getProductImage = (product, isAi, colorIndex = 0) => {
+    if (!product) return "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800";
+    const variant = product.color_variants?.[colorIndex];
     if (isAi) {
+      if (variant?.ai_image) return variant.ai_image;
       if (product.ai_model_image) return product.ai_model_image;
       return CATEGORY_MODEL_FALLBACKS[product.category] || CATEGORY_MODEL_FALLBACKS.Default;
     }
+    if (variant?.image) return variant.image;
     return product.image || "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800";
   };
 
@@ -276,18 +288,31 @@ export default function Storefront({ products = [] }) {
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-gray-900 relative">
       
       {/* 1. TOP ANNOUNCEMENT TICKER */}
-      <div className="bg-neutral-900 text-neutral-200 text-xs py-2 px-4 border-b border-neutral-800">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
+      <div className="bg-neutral-950 text-neutral-300 text-xs py-2 px-4 border-b border-neutral-800">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span className="font-semibold tracking-wide">
-              KAMAKHYA TRADING CO • B2B Direct Factory Wholesale & Manufacturing
+              KAMAKHYA TRADING CO • Direct Factory Mill Wholesale & Manufacturing
             </span>
           </div>
           <div className="flex items-center gap-4 text-[11px] text-neutral-400">
-            <span>⚡ Pan-India Transport Dispatch</span>
-            <span className="hidden md:inline">• GST Invoicing</span>
-            <span>• Direct WhatsApp: <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline font-bold">+91 63506 26582</a></span>
+            <button
+              onClick={() => setIsGuideOpen(true)}
+              className="text-white hover:text-emerald-400 font-bold underline flex items-center gap-1"
+            >
+              <span>📖</span>
+              <span>Buyer Guide</span>
+            </button>
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="text-white hover:text-purple-400 font-bold underline flex items-center gap-1"
+            >
+              <span>👤</span>
+              <span>Restock & Login</span>
+            </button>
+            <span className="hidden md:inline">• All-India Transport</span>
+            <span>• WhatsApp: <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline font-bold">+91 63506 26582</a></span>
           </div>
         </div>
       </div>
@@ -316,13 +341,13 @@ export default function Storefront({ products = [] }) {
             </div>
 
             {/* Desktop Mode Toggle & Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               
               {/* Wholesale vs Retail Mode Toggle */}
               <div className="bg-gray-100 p-1 rounded-full flex items-center border border-gray-200 shadow-inner">
                 <button
                   onClick={() => setPurchaseMode('wholesale')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
+                  className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
                     purchaseMode === 'wholesale'
                       ? 'bg-black text-white shadow-sm'
                       : 'text-gray-600 hover:text-black'
@@ -332,7 +357,7 @@ export default function Storefront({ products = [] }) {
                 </button>
                 <button
                   onClick={() => setPurchaseMode('retail')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
+                  className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
                     purchaseMode === 'retail'
                       ? 'bg-white text-black shadow-sm'
                       : 'text-gray-600 hover:text-black'
@@ -342,14 +367,24 @@ export default function Storefront({ products = [] }) {
                 </button>
               </div>
 
+              {/* Boutique Buyer Portal Button */}
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="hidden lg:flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200 transition-colors shadow-xs"
+                title="Boutique Member Portal & Restock"
+              >
+                <span>👤</span>
+                <span>Restock / Login</span>
+              </button>
+
               {/* Boutique Profit & ROI Calculator Button */}
               <button
                 onClick={() => setIsRoiModalOpen(true)}
-                className="hidden md:flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors shadow-xs"
+                className="hidden md:flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors shadow-xs"
                 title="Calculate resale margins and profit"
               >
                 <span>📊</span>
-                <span>Margin Calculator</span>
+                <span>Margin Calc</span>
               </button>
 
               {/* AI Try-On Studio Button */}
@@ -360,10 +395,10 @@ export default function Storefront({ products = [] }) {
                     setStudioSelectedProduct(products[0]);
                   }
                 }}
-                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-colors shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-colors shadow-xs"
               >
                 <span>✨</span>
-                <span>AI Try-On Studio</span>
+                <span>AI Try-On</span>
               </button>
 
               {/* Bulk PO Quote Bag Trigger */}
@@ -396,45 +431,86 @@ export default function Storefront({ products = [] }) {
         </div>
       </nav>
 
-      {/* 3. HERO BANNER */}
-      <div className="relative bg-neutral-950 text-white py-16 px-4 sm:px-6 overflow-hidden">
-        <div className="absolute inset-0 opacity-30">
-          <img
-            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000"
-            alt="Wholesale Apparel"
-            className="w-full h-full object-cover filter brightness-75"
-          />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/70 to-transparent"></div>
+      {/* 3. EDITORIAL MINIMALIST HERO BANNER */}
+      <div className="relative bg-[#F4F4F6] text-gray-900 border-b border-gray-200 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 md:py-16 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          
+          <div className="md:col-span-7 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-800 uppercase tracking-widest shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-black"></span>
+              <span>SUMMER / FESTIVE 2026 FACTORY COLLECTION</span>
+            </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-emerald-300 mb-4 uppercase tracking-widest">
-            <span>🏭 Direct Factory Manufacturing</span>
-            <span>•</span>
-            <span>Boutiques & Retailers</span>
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight uppercase leading-tight text-black">
+              Direct Mill Wholesale <span className="font-light italic text-neutral-600">& Apparel Studio</span>
+            </h1>
+
+            <p className="text-gray-600 text-sm sm:text-base max-w-xl leading-relaxed">
+              Curated ethnic, bridal, western, and girls partywear manufactured in-house for boutique owners, retail showrooms, and wholesale stockists across India.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <button
+                onClick={() => { setActiveCategory("All Collections"); }}
+                className="px-6 py-3 bg-black hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95"
+              >
+                Explore Full Catalog ({products.length} SKUs)
+              </button>
+              <button
+                onClick={() => setIsAiStudioOpen(true)}
+                className="px-5 py-3 bg-white hover:bg-gray-50 text-black border border-gray-300 font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-2xs flex items-center gap-1.5 active:scale-95"
+              >
+                <span>✨</span>
+                <span>Launch AI Try-On Studio</span>
+              </button>
+            </div>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight mb-4 uppercase leading-tight">
-            Premium Women & Girls <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-rose-200 to-white">Apparel Wholesale</span>
-          </h1>
+          <div className="md:col-span-5 relative aspect-[4/5] rounded-3xl overflow-hidden shadow-xl border border-gray-200 bg-gray-200">
+            <img
+              src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=1200"
+              alt="Kamakhya Editorial Lookbook"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md p-3 rounded-2xl border border-gray-200 flex items-center justify-between text-xs shadow-lg">
+              <div>
+                <span className="text-[10px] font-bold uppercase text-gray-500 block">Featured Factory Lot</span>
+                <span className="font-black text-gray-900">Chanderi Anarkali Suit Lot</span>
+              </div>
+              <span className="bg-black text-white px-2.5 py-1 rounded-lg text-xs font-black">
+                ₹599 / pc
+              </span>
+            </div>
+          </div>
 
-          <p className="text-neutral-300 text-sm sm:text-base max-w-2xl mx-auto mb-6 leading-relaxed">
-            Direct mill rates on Kurtis, Lehengas, Western Tops & Girls Partywear. Low MOQs, live WhatsApp ordering, and AI on-model preview catalog.
-          </p>
+        </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-bold text-neutral-300">
-            <div className="flex items-center gap-1.5 bg-neutral-900/80 px-3 py-1.5 rounded-lg border border-neutral-800">
-              <span className="text-emerald-400">✓</span> Factory MOQ Rates
-            </div>
-            <div className="flex items-center gap-1.5 bg-neutral-900/80 px-3 py-1.5 rounded-lg border border-neutral-800">
-              <span className="text-emerald-400">✓</span> Sample Single Pieces
-            </div>
-            <div className="flex items-center gap-1.5 bg-neutral-900/80 px-3 py-1.5 rounded-lg border border-neutral-800">
-              <span className="text-emerald-400">✓</span> All-India Transport
-            </div>
-            <div className="flex items-center gap-1.5 bg-neutral-900/80 px-3 py-1.5 rounded-lg border border-neutral-800">
-              <span className="text-emerald-400">✓</span> Instant WhatsApp PO
-            </div>
+        {/* Visual Category Blocks Grid (ColoShop minimalist style) */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            {[
+              { title: "Ethnic Wear", count: "Kurtis & Suits", image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=600" },
+              { title: "Bridal", count: "Lehengas & Silk", image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=600" },
+              { title: "Western Wear", count: "Blazers & Cargo", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600" },
+              { title: "Girls Partywear", count: "Frocks & Gowns", image: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=600" },
+            ].map((cat) => (
+              <button
+                key={cat.title}
+                onClick={() => setActiveCategory(cat.title)}
+                className="group relative aspect-[4/3] rounded-2xl overflow-hidden border border-gray-200 text-left shadow-2xs hover:shadow-lg transition-all"
+              >
+                <img
+                  src={cat.image}
+                  alt={cat.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                <div className="absolute bottom-3 left-3 right-3 text-white">
+                  <span className="text-[10px] text-gray-300 font-bold uppercase tracking-wider block">{cat.count}</span>
+                  <span className="text-sm font-black uppercase tracking-tight block">{cat.title}</span>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -620,8 +696,8 @@ export default function Storefront({ products = [] }) {
               const activeSize = selectedSizes[product.id] || sizes[0] || 'Free Size';
 
               const isAiView = !!aiViewModel[product.id];
-              const defaultImage = getProductImage(product, false);
-              const aiModelImage = getProductImage(product, true);
+              const defaultImage = getProductImage(product, false, activeColorIndex);
+              const aiModelImage = getProductImage(product, true, activeColorIndex);
               const currentImageSrc = isAiView ? aiModelImage : defaultImage;
 
               // Single item WhatsApp order URL
@@ -668,14 +744,6 @@ export default function Storefront({ products = [] }) {
                       alt={product.title}
                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
-
-                    {/* Instant Color Tint (active only in flat catalog view) */}
-                    {!isAiView && activeColor && (
-                      <div
-                        className="absolute inset-0 z-10 mix-blend-multiply opacity-80 pointer-events-none transition-colors duration-300"
-                        style={{ backgroundColor: activeColor.hex_code === '#FFFFFF' ? 'transparent' : activeColor.hex_code }}
-                      />
-                    )}
 
                     {/* Quick View Overlay on Hover */}
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 pointer-events-none">
@@ -813,6 +881,17 @@ export default function Storefront({ products = [] }) {
                       >
                         <span>+</span>
                         <span>Add to Bulk PO</span>
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRestockProduct(product);
+                          setIsAuthModalOpen(true);
+                        }}
+                        className="text-[11px] font-semibold text-gray-500 hover:text-black transition-colors underline pt-1 text-center"
+                      >
+                        Request Restock / Custom Lot
                       </button>
                     </div>
 
@@ -1142,7 +1221,32 @@ export default function Storefront({ products = [] }) {
         whatsappNumber={WHATSAPP_NUMBER}
       />
 
-      {/* 13. FLOATING WHATSAPP & PO CART TRIGGERS */}
+      {/* 13. BUYER AUTH & RESTOCK REQUEST MODAL */}
+      <UserAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        products={products}
+        initialRestockProduct={restockProduct}
+      />
+
+      {/* 14. FIRST-TIME BUYER ONBOARDING GUIDE */}
+      <NewUserGuide
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+      />
+
+      {/* 15. REAL MULTILINGUAL VOICE AI CHATBOT (Hindi / English / Voice) */}
+      <AiChatbot
+        products={products}
+        onOpenTryOn={(p) => {
+          setStudioSelectedProduct(p);
+          setIsAiStudioOpen(true);
+        }}
+        onOpenCalculator={() => setIsRoiModalOpen(true)}
+        onOpenRestock={() => setIsAuthModalOpen(true)}
+      />
+
+      {/* 16. FLOATING WHATSAPP & PO CART TRIGGERS */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
         
         {/* Floating Margin Calculator Trigger */}
@@ -1184,7 +1288,7 @@ export default function Storefront({ products = [] }) {
 
       </div>
 
-      {/* 14. FOOTER */}
+      {/* 17. FOOTER */}
       <footer className="bg-neutral-950 text-neutral-400 text-xs border-t border-neutral-900 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-left">
@@ -1200,6 +1304,12 @@ export default function Storefront({ products = [] }) {
             <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="hover:text-white">
               WhatsApp Support
             </a>
+            <button onClick={() => setIsGuideOpen(true)} className="hover:text-white">
+              Buyer Guide
+            </button>
+            <button onClick={() => setIsAuthModalOpen(true)} className="hover:text-white">
+              Restock / Account
+            </button>
             <a href="/admin" className="hover:text-white">
               Admin Portal
             </a>
