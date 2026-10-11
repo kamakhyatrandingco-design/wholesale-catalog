@@ -1,31 +1,34 @@
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
 import { NextResponse } from 'next/server';
+import matter from 'gray-matter';
+import { listFiles, getFile } from '@/app/lib/github';
+
+const PRODUCTS_DIR = 'content/products';
 
 export async function GET() {
   try {
-    const productsDir = path.join(process.cwd(), 'content/products');
-    
-    if (!fs.existsSync(productsDir)) {
-      return NextResponse.json([]); 
-    }
+    const files = await listFiles(PRODUCTS_DIR);
+    const mdFiles = files.filter((f) => f.name.endsWith('.md'));
 
-    const files = fs.readdirSync(productsDir);
-    const products = files.filter(fn => fn.endsWith('.md')).map((fileName) => {
-      const filePath = path.join(productsDir, fileName);
-      const fileContent = fs.readFileSync(filePath, 'utf8');
-      const { data, content } = matter(fileContent);
-      return {
-        id: fileName.replace('.md', ''),
-        slug: fileName.replace('.md', ''),
-        ...data,
-        body: content,
-      };
-    });
+    const products = await Promise.all(
+      mdFiles.map(async (file) => {
+        const result = await getFile(file.path);
+        if (!result) return null;
 
-    return NextResponse.json(products);
+        const { data, content } = matter(result.content);
+        return {
+          id: file.name.replace('.md', ''),
+          slug: file.name.replace('.md', ''),
+          ...data,
+          body: content,
+        };
+      })
+    );
+
+    return NextResponse.json(products.filter(Boolean));
   } catch (error) {
-    return NextResponse.json({ error: "Failed to load products: " + error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to load products: ' + error.message },
+      { status: 500 }
+    );
   }
 }

@@ -1,9 +1,8 @@
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
 import { NextResponse } from 'next/server';
+import matter from 'gray-matter';
+import { listFiles, getFile, putFile, deleteFile } from '@/app/lib/github';
 
-const PRODUCTS_DIR = path.join(process.cwd(), 'content/products');
+const PRODUCTS_DIR = 'content/products';
 
 // Helper to sanitize slug
 function createSlug(title, sku) {
@@ -14,94 +13,127 @@ function createSlug(title, sku) {
   return base || `product-${Date.now()}`;
 }
 
-// GET all products
+// GET all products — reads from GitHub API (works on read-only serverless)
 export async function GET() {
   try {
-    if (!fs.existsSync(PRODUCTS_DIR)) {
-      return NextResponse.json([]);
-    }
+    const files = await listFiles(PRODUCTS_DIR);
+    const mdFiles = files.filter((f) => f.name.endsWith('.md'));
 
-    const files = fs.readdirSync(PRODUCTS_DIR);
-    const products = files
-      .filter((f) => f.endsWith('.md'))
-      .map((fileName) => {
-        const filePath = path.join(PRODUCTS_DIR, fileName);
-        const fileContent = fs.readFileSync(filePath, 'utf8');
-        const { data, content } = matter(fileContent);
+    const products = await Promise.all(
+      mdFiles.map(async (file) => {
+        const result = await getFile(file.path);
+        if (!result) return null;
+
+        const { data, content } = matter(result.content);
         return {
-          id: fileName.replace('.md', ''),
-          slug: fileName.replace('.md', ''),
+          id: file.name.replace('.md', ''),
+          slug: file.name.replace('.md', ''),
+          _sha: result.sha,
           ...data,
           description: data.description || content || '',
         };
-      });
+      })
+    );
 
-    return NextResponse.json({ success: true, products });
+    return NextResponse.json({
+      success: true,
+      products: products.filter(Boolean),
+    });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }
 
-// POST create new product
+// POST create new product — commits a new .md file to the repo
 export async function POST(req) {
   try {
     const product = await req.json();
-    const slug = product.slug || createSlug(product.title, product.sku);
-    const filePath = path.join(PRODUCTS_DIR, `${slug}.md`);
+    let slug = product.slug || createSlug(product.title, product.sku);
+    const filePath = `${PRODUCTS_DIR}/${slug}.md`;
 
-    if (fs.existsSync(filePath)) {
-      // If slug exists, append timestamp
-      const uniqueSlug = `${slug}-${Date.now().toString().slice(-4)}`;
-      return saveProduct(uniqueSlug, product);
+    // Check if slug already exists
+    const existing = await getFile(filePath);
+    if (existing) {
+      slug = `${slug}-${Date.now().toString().slice(-4)}`;
     }
 
-    return saveProduct(slug, product);
+    return await saveProduct(slug, product);
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }
 
-// PUT update existing product
+// PUT update existing product — updates the .md file in the repo
 export async function PUT(req) {
   try {
     const product = await req.json();
     const slug = product.id || product.slug;
 
     if (!slug) {
-      return NextResponse.json({ success: false, error: "Product slug/id is required" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'Product slug/id is required' },
+        { status: 400 }
+      );
     }
 
-    return saveProduct(slug, product);
+    return await saveProduct(slug, product);
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }
 
-// DELETE product
+// DELETE product — removes the .md file from the repo
 export async function DELETE(req) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json({ success: false, error: "Product id is required" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'Product id is required' },
+        { status: 400 }
+      );
     }
 
-    const filePath = path.join(PRODUCTS_DIR, `${id}.md`);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      return NextResponse.json({ success: true, message: "Product deleted successfully" });
+    const filePath = `${PRODUCTS_DIR}/${id}.md`;
+    const existing = await getFile(filePath);
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: 'Product file not found' },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json({ success: false, error: "Product file not found" }, { status: 404 });
+    await deleteFile(
+      filePath,
+      existing.sha,
+      `delete: remove product ${id} from catalog`
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: 'Product deleted successfully',
+    });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }
 
-function saveProduct(slug, product) {
-  osEnsureDir(PRODUCTS_DIR);
-  const filePath = path.join(PRODUCTS_DIR, `${slug}.md`);
+async function saveProduct(slug, product) {
+  const filePath = `${PRODUCTS_DIR}/${slug}.md`;
 
   const frontMatter = {
     title: product.title || 'Untitled Apparel',
@@ -111,25 +143,33 @@ function saveProduct(slug, product) {
     retail_price: Number(product.retail_price) || 0,
     wholesale_price: Number(product.wholesale_price) || 0,
     moq: Number(product.moq) || 30,
-    sizes: Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ['Free Size'],
-    image: product.image || 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800',
+    sizes:
+      Array.isArray(product.sizes) && product.sizes.length
+        ? product.sizes
+        : ['Free Size'],
+    image:
+      product.image ||
+      'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800',
     ai_model_image: product.ai_model_image || '',
     description: product.description || '',
-    color_variants: Array.isArray(product.color_variants) ? product.color_variants : [],
+    color_variants: Array.isArray(product.color_variants)
+      ? product.color_variants
+      : [],
   };
 
   const fileContent = matter.stringify(product.description || '', frontMatter);
-  fs.writeFileSync(filePath, fileContent, 'utf8');
+
+  // Check if file already exists (to get sha for update)
+  const existing = await getFile(filePath);
+  const sha = existing ? existing.sha : null;
+  const action = sha ? 'update' : 'add';
+  const commitMessage = `${action}: ${frontMatter.title} (${frontMatter.sku}) in catalog`;
+
+  await putFile(filePath, fileContent, commitMessage, sha);
 
   return NextResponse.json({
     success: true,
-    message: "Product saved successfully",
+    message: 'Product saved successfully',
     product: { id: slug, slug, ...frontMatter },
   });
-}
-
-function osEnsureDir(dir) {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
 }
