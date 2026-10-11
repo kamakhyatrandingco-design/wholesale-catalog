@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import AiTryOnStudio from './components/AiTryOnStudio';
+import BoutiqueRoiCalculator from './components/BoutiqueRoiCalculator';
 
 const WHATSAPP_NUMBER = "916350626582";
 const SHOP_NAME = "Kamakhya Trading Co";
@@ -36,9 +38,47 @@ export default function Storefront({ products = [] }) {
   // AI Try-On Studio Modal
   const [isAiStudioOpen, setIsAiStudioOpen] = useState(false);
   const [studioSelectedProduct, setStudioSelectedProduct] = useState(null);
-  const [studioModelType, setStudioModelType] = useState("traditional");
-  const [isGeneratingTryon, setIsGeneratingTryon] = useState(false);
-  const [tryonResultImage, setTryonResultImage] = useState(null);
+
+  // Boutique ROI / Margin Calculator Modal
+  const [isRoiModalOpen, setIsRoiModalOpen] = useState(false);
+
+  // Voice Search State
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
+
+  // Web Speech API Voice Search
+  const startVoiceSearch = () => {
+    if (typeof window === 'undefined') return;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice search is supported in Chrome, Edge, and modern mobile browsers.");
+      return;
+    }
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-IN';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      setIsVoiceListening(true);
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setSearchQuery(transcript);
+        setIsVoiceListening(false);
+      };
+
+      recognition.onerror = () => {
+        setIsVoiceListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsVoiceListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      setIsVoiceListening(false);
+    }
+  };
 
   const CATEGORIES = [
     "All Collections",
@@ -302,6 +342,16 @@ export default function Storefront({ products = [] }) {
                 </button>
               </div>
 
+              {/* Boutique Profit & ROI Calculator Button */}
+              <button
+                onClick={() => setIsRoiModalOpen(true)}
+                className="hidden md:flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors shadow-xs"
+                title="Calculate resale margins and profit"
+              >
+                <span>📊</span>
+                <span>Margin Calculator</span>
+              </button>
+
               {/* AI Try-On Studio Button */}
               <button
                 onClick={() => {
@@ -310,7 +360,7 @@ export default function Storefront({ products = [] }) {
                     setStudioSelectedProduct(products[0]);
                   }
                 }}
-                className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-colors shadow-xs"
+                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-colors shadow-xs"
               >
                 <span>✨</span>
                 <span>AI Try-On Studio</span>
@@ -334,11 +384,9 @@ export default function Storefront({ products = [] }) {
 
               {/* Admin Portal Link */}
               <a
-                href="/admin/index.html"
-                target="_blank"
-                rel="noreferrer"
+                href="/admin"
                 className="hidden sm:inline-flex text-xs font-bold px-3 py-2 text-gray-500 hover:text-black border border-gray-200 hover:border-gray-400 rounded-xl transition-all"
-                title="Open Admin Portal (Sveltia CMS)"
+                title="Open Factory Admin Portal"
               >
                 Admin
               </a>
@@ -407,6 +455,23 @@ export default function Storefront({ products = [] }) {
             placeholder="Search intent: 'Ethnic under 1000', 'Partywear', 'Kurti below 700'..."
             className="w-full px-2 py-1.5 text-sm text-gray-800 focus:outline-none placeholder-gray-400"
           />
+
+          {/* Web Speech API Voice Search Button */}
+          <button
+            type="button"
+            onClick={startVoiceSearch}
+            className={`p-2 rounded-xl transition-all duration-200 flex items-center justify-center flex-shrink-0 ${
+              isVoiceListening
+                ? 'bg-red-500 text-white animate-pulse ring-4 ring-red-200'
+                : 'text-gray-400 hover:text-black hover:bg-gray-100'
+            }`}
+            title={isVoiceListening ? "Listening... Speak your query" : "Voice Search (Click to speak)"}
+          >
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+          </button>
+
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
@@ -416,6 +481,12 @@ export default function Storefront({ products = [] }) {
             </button>
           )}
         </div>
+
+        {isVoiceListening && (
+          <div className="mt-2 text-center text-xs font-bold text-red-600 bg-red-50 py-1 px-3 rounded-full border border-red-200 inline-block mx-auto animate-pulse">
+            🎙️ Listening... Speak style or budget (e.g. "Ethnic under 1000")
+          </div>
+        )}
 
         {/* AI Quick Prompt Chips */}
         <div className="flex flex-wrap gap-2 mt-3 justify-center text-xs">
@@ -711,8 +782,19 @@ export default function Storefront({ products = [] }) {
                       )}
                     </div>
 
-                    {/* Action CTAs: Direct WhatsApp & Add to Bulk Quote */}
+                    {/* Action CTAs: Direct WhatsApp & Add to Bulk Quote & AI Try On */}
                     <div className="flex flex-col gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStudioSelectedProduct(product);
+                          setIsAiStudioOpen(true);
+                        }}
+                        className="w-full bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold py-2 px-3 rounded-xl transition-all duration-200 text-xs flex items-center justify-center gap-1.5 border border-purple-200 shadow-xs"
+                      >
+                        <span>✨</span>
+                        <span>Try on AI Model Studio</span>
+                      </button>
                       <a
                         href={productWaUrl}
                         target="_blank"
@@ -1043,142 +1125,36 @@ export default function Storefront({ products = [] }) {
         </div>
       )}
 
-      {/* 11. AI TRY-ON STUDIO MODAL */}
-      {isAiStudioOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-xs" onClick={() => setIsAiStudioOpen(false)} />
-          
-          <div className="relative bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl z-10 overflow-hidden">
-            <button
-              onClick={() => setIsAiStudioOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-black font-bold text-lg p-2"
-            >
-              ✕
-            </button>
+      {/* 11. ADVANCED AI TRY-ON STUDIO MODAL */}
+      <AiTryOnStudio
+        isOpen={isAiStudioOpen}
+        onClose={() => setIsAiStudioOpen(false)}
+        products={products}
+        initialProduct={studioSelectedProduct}
+        whatsappNumber={WHATSAPP_NUMBER}
+        onAddToQuote={(prod) => addToQuote(prod)}
+      />
 
-            <div className="text-center max-w-xl mx-auto mb-6">
-              <span className="text-xs font-bold text-purple-700 bg-purple-50 px-3 py-1 rounded-full uppercase tracking-wider border border-purple-200">
-                ✨ AI Virtual Try-On Studio
-              </span>
-              <h3 className="text-2xl font-black text-gray-900 mt-2">
-                Visualize Catalog Garments on AI Models
-              </h3>
-              <p className="text-xs text-gray-500 mt-1">
-                Zero studio fees. Preview how your wholesale inventory drapes on digital fashion mannequins in real-time.
-              </p>
-            </div>
+      {/* 12. BOUTIQUE PROFIT & ROI CALCULATOR MODAL */}
+      <BoutiqueRoiCalculator
+        isOpen={isRoiModalOpen}
+        onClose={() => setIsRoiModalOpen(false)}
+        whatsappNumber={WHATSAPP_NUMBER}
+      />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
-              
-              {/* Garment Selector */}
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">
-                    1. Select Garment to Try On:
-                  </label>
-                  <select
-                    value={studioSelectedProduct?.id || ""}
-                    onChange={(e) => {
-                      const found = products.find(p => p.id === e.target.value);
-                      if (found) {
-                        setStudioSelectedProduct(found);
-                        setTryonResultImage(null);
-                      }
-                    }}
-                    className="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:outline-none"
-                  >
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.title} ({p.sku}) - {p.category}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">
-                    2. Choose Fashion Mannequin Style:
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'traditional', label: 'Ethnic Model', icon: '🥻' },
-                      { id: 'western', label: 'Western Model', icon: '👗' },
-                      { id: 'party', label: 'Partywear', icon: '✨' },
-                    ].map(style => (
-                      <button
-                        key={style.id}
-                        onClick={() => setStudioModelType(style.id)}
-                        className={`p-2.5 rounded-xl border text-xs font-bold text-center transition-all ${
-                          studioModelType === style.id
-                            ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-xs'
-                            : 'border-gray-200 hover:bg-gray-50 text-gray-600'
-                        }`}
-                      >
-                        <span className="block text-base mb-1">{style.icon}</span>
-                        <span>{style.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleGenerateTryon}
-                  disabled={isGeneratingTryon}
-                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl text-xs shadow-md flex items-center justify-center gap-2 transition-transform active:scale-98 disabled:opacity-50"
-                >
-                  {isGeneratingTryon ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Simulating AI Neural Drape...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>✨ Generate AI Model Fit</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Result Preview Screen */}
-              <div className="relative aspect-[4/5] bg-gray-900 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center border border-gray-200">
-                {isGeneratingTryon ? (
-                  <div className="text-center p-6 text-white space-y-3">
-                    <div className="w-10 h-10 border-3 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <div className="text-xs font-bold tracking-wide">AI Generative Engine Active</div>
-                    <p className="text-[10px] text-gray-400">Rendering high-resolution fabric texture & lighting...</p>
-                  </div>
-                ) : (
-                  <img
-                    src={
-                      tryonResultImage ||
-                      studioSelectedProduct?.ai_model_image ||
-                      CATEGORY_MODEL_FALLBACKS[studioSelectedProduct?.category] ||
-                      CATEGORY_MODEL_FALLBACKS.Default
-                    }
-                    alt="AI Try-on Result"
-                    className="w-full h-full object-cover"
-                  />
-                )}
-
-                <div className="absolute bottom-3 left-3 right-3 bg-black/75 backdrop-blur-sm text-white p-2 rounded-xl text-[10px] flex items-center justify-between">
-                  <span className="font-semibold truncate">
-                    {studioSelectedProduct?.title}
-                  </span>
-                  <span className="text-emerald-400 font-bold flex-shrink-0">
-                    Photorealistic Preview
-                  </span>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* 12. FLOATING WHATSAPP & PO CART TRIGGERS */}
+      {/* 13. FLOATING WHATSAPP & PO CART TRIGGERS */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
         
+        {/* Floating Margin Calculator Trigger */}
+        <button
+          onClick={() => setIsRoiModalOpen(true)}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-full shadow-2xl flex items-center gap-1.5 text-xs font-bold border border-emerald-400/50 transition-all hover:scale-105 active:scale-95"
+          title="Boutique Profit & ROI Estimator"
+        >
+          <span>📊</span>
+          <span>Margin Estimator</span>
+        </button>
+
         {/* Floating Bulk PO Bag Pill */}
         {quoteItems.length > 0 && (
           <button
@@ -1208,7 +1184,7 @@ export default function Storefront({ products = [] }) {
 
       </div>
 
-      {/* 13. FOOTER */}
+      {/* 14. FOOTER */}
       <footer className="bg-neutral-950 text-neutral-400 text-xs border-t border-neutral-900 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-left">
@@ -1224,9 +1200,12 @@ export default function Storefront({ products = [] }) {
             <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="hover:text-white">
               WhatsApp Support
             </a>
-            <a href="/admin/index.html" target="_blank" rel="noreferrer" className="hover:text-white">
-              Admin Portal (CMS)
+            <a href="/admin" className="hover:text-white">
+              Admin Portal
             </a>
+            <button onClick={() => setIsRoiModalOpen(true)} className="hover:text-white">
+              Margin Calculator
+            </button>
             <button onClick={() => setIsAiStudioOpen(true)} className="hover:text-white">
               AI Try-On Studio
             </button>
