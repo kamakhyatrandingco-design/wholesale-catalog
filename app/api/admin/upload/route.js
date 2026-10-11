@@ -45,8 +45,8 @@ export async function POST(req) {
             content: base64Content,
             branch,
             committer: {
-              name: 'hariomjoshi45',
-              email: 'harijoshi215@gmail.com',
+              name: process.env.GITHUB_COMMITTER_NAME || 'hariomjoshi45',
+              email: process.env.GITHUB_COMMITTER_EMAIL || 'harijoshi215@gmail.com',
             },
           }),
         });

@@ -1,11 +1,33 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
+import Link from 'next/link';
 
 const OWNER_PHONE = "+91 63506 26582";
 
+function subscribeAdminAuth(callback) {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
+
+function getAdminAuthSnapshot() {
+  if (typeof window === 'undefined') return 'invalid';
+  try {
+    return localStorage.getItem('ktc_admin_auth') || 'invalid';
+  } catch {
+    return 'invalid';
+  }
+}
+
 export default function AdminPortal() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const savedAuthSnapshot = useSyncExternalStore(
+    subscribeAdminAuth,
+    getAdminAuthSnapshot,
+    () => 'invalid'
+  );
+  const [sessionAuth, setSessionAuth] = useState(false);
+  const isAuthenticated = sessionAuth || savedAuthSnapshot === 'valid';
   const [pin, setPin] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -76,16 +98,7 @@ export default function AdminPortal() {
 
   const SIZES_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "Free Size"];
 
-  // Check saved session
-  useEffect(() => {
-    const savedAuth = localStorage.getItem('ktc_admin_auth');
-    if (savedAuth === 'valid') {
-      setIsAuthenticated(true);
-      fetchProducts();
-    }
-  }, []);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setIsLoadingProducts(true);
     try {
       const res = await fetch('/api/admin/products');
@@ -109,7 +122,17 @@ export default function AdminPortal() {
     } finally {
       setIsLoadingProducts(false);
     }
-  };
+  }, []);
+
+  // Fetch products when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const timer = setTimeout(() => {
+        fetchProducts();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, fetchProducts]);
 
   // Handle Login
   const handleLogin = async (e) => {
@@ -126,8 +149,8 @@ export default function AdminPortal() {
       const data = await res.json();
 
       if (data.success) {
-        setIsAuthenticated(true);
         localStorage.setItem('ktc_admin_auth', 'valid');
+        setSessionAuth(true);
         fetchProducts();
       } else {
         setLoginError(data.error || "Incorrect PIN");
@@ -200,7 +223,7 @@ export default function AdminPortal() {
 
   const handleLogout = () => {
     localStorage.removeItem('ktc_admin_auth');
-    setIsAuthenticated(false);
+    setSessionAuth(false);
   };
 
   // Open Edit Form
@@ -478,9 +501,9 @@ export default function AdminPortal() {
                 >
                   Forgot Key? Reset via WhatsApp OTP
                 </button>
-                <a href="/" className="text-neutral-400 hover:text-white">
+                <Link href="/" className="text-neutral-400 hover:text-white">
                   ← Back to Storefront
-                </a>
+                </Link>
               </div>
             </form>
           ) : (
