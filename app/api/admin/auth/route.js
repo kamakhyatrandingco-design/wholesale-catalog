@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 
 // Default owner phone and master credentials
 const OWNER_PHONE = "916350626582";
-let currentAdminPin = process.env.ADMIN_PIN || "635062"; // Default PIN matching phone prefix
+const PRE_PASSWORD = "63506265"; // Master pre-password specified by owner
+let currentAdminPin = process.env.ADMIN_PIN || PRE_PASSWORD;
 let activeOtp = null;
 let otpExpiry = 0;
 
@@ -13,7 +14,7 @@ export async function POST(req) {
 
     // Action 1: Standard PIN Login
     if (action === 'login') {
-      if (pin === currentAdminPin || pin === "kamakhya2026" || pin === "635062") {
+      if (pin === currentAdminPin || pin === PRE_PASSWORD) {
         return NextResponse.json({
           success: true,
           message: "Authentication successful",
@@ -22,7 +23,7 @@ export async function POST(req) {
       }
       return NextResponse.json({
         success: false,
-        error: "Incorrect Admin PIN. Use your master PIN or reset via Phone OTP."
+        error: "Incorrect Admin PIN / Password. You can reset it using WhatsApp OTP."
       }, { status: 401 });
     }
 
