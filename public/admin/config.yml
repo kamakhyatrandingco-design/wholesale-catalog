@@ -29,6 +29,23 @@ collections:
             ],
         }
       - {
+          label: "Fabric / Material",
+          name: "fabric",
+          widget: "select",
+          required: false,
+          options:
+            [
+              "Pure Cotton",
+              "Rayon Slub",
+              "Silk / Chanderi",
+              "Georgette",
+              "Crepe",
+              "Velvet",
+              "Net / Organza",
+              "Linen Blend",
+            ],
+        }
+      - {
           label: "Retail Price (Single Piece ₹)",
           name: "retail_price",
           widget: "number",
@@ -42,7 +59,7 @@ collections:
           label: "Minimum Order Quantity (MOQ)",
           name: "moq",
           widget: "number",
-          default: 5,
+          default: 30,
         }
       - {
           label: "Sizes Available",
@@ -52,9 +69,21 @@ collections:
           options: ["XS", "S", "M", "L", "XL", "XXL", "Free Size"],
         }
       - {
-          label: "Product Image",
+          label: "Product Image (Catalog Flat Shoot)",
           name: "image",
           widget: "image",
+          required: false,
+        }
+      - {
+          label: "AI Model Try-On Image (On-Model Shoot)",
+          name: "ai_model_image",
+          widget: "image",
+          required: false,
+        }
+      - {
+          label: "Product Description / Specifications",
+          name: "description",
+          widget: "text",
           required: false,
         }
       - label: "Color Variants"

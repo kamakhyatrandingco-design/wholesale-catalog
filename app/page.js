@@ -11,16 +11,20 @@ export default function Home() {
     if (fs.existsSync(productsDirectory)) {
       const filenames = fs.readdirSync(productsDirectory);
       
-      products = filenames.map((filename) => {
-        const filePath = path.join(productsDirectory, filename);
-        const fileContents = fs.readFileSync(filePath, 'utf8');
-        const { data } = matter(fileContents);
-        
-        return {
-          id: filename.replace('.md', ''),
-          ...data,
-        };
-      });
+      products = filenames
+        .filter((filename) => filename.endsWith('.md'))
+        .map((filename) => {
+          const filePath = path.join(productsDirectory, filename);
+          const fileContents = fs.readFileSync(filePath, 'utf8');
+          const { data, content } = matter(fileContents);
+          
+          return {
+            id: filename.replace('.md', ''),
+            slug: filename.replace('.md', ''),
+            ...data,
+            description: data.description || content || '',
+          };
+        });
     }
   } catch (error) {
     console.error("Error reading products:", error);

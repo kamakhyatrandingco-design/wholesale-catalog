@@ -15,12 +15,17 @@ export async function GET() {
     const products = files.filter(fn => fn.endsWith('.md')).map((fileName) => {
       const filePath = path.join(productsDir, fileName);
       const fileContent = fs.readFileSync(filePath, 'utf8');
-      const { data } = matter(fileContent);
-      return data;
+      const { data, content } = matter(fileContent);
+      return {
+        id: fileName.replace('.md', ''),
+        slug: fileName.replace('.md', ''),
+        ...data,
+        body: content,
+      };
     });
 
     return NextResponse.json(products);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to load products" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load products: " + error.message }, { status: 500 });
   }
 }
