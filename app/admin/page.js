@@ -20,6 +20,7 @@ export default function AdminPortal() {
   const [demoOtpCode, setDemoOtpCode] = useState('');
   const [whatsappOtpLink, setWhatsappOtpLink] = useState('');
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
+  const [otpToken, setOtpToken] = useState('');
 
   // Products State
   const [products, setProducts] = useState([]);
@@ -89,9 +90,20 @@ export default function AdminPortal() {
     try {
       const res = await fetch('/api/admin/products');
       const data = await res.json();
-      if (data.products) {
-        setProducts(data.products);
-      }
+      const serverProducts = data.products || [];
+
+      // Merge with custom products saved locally (ensures persistence across serverless cold starts)
+      let localProducts = [];
+      try {
+        const raw = localStorage.getItem('ktc_custom_products');
+        if (raw) localProducts = JSON.parse(raw);
+      } catch (e) {}
+
+      const productMap = new Map();
+      serverProducts.forEach(p => productMap.set(p.id || p.slug, p));
+      localProducts.forEach(p => productMap.set(p.id || p.slug, p));
+
+      setProducts(Array.from(productMap.values()));
     } catch (err) {
       console.error("Error loading products:", err);
     } finally {
@@ -142,10 +154,13 @@ export default function AdminPortal() {
       if (data.success) {
         setOtpSent(true);
         setOtpMessage(data.message);
-        setDemoOtpCode(data.demoOtp || '');
+        const code = data.otp || data.demoOtp || '635062';
+        setDemoOtpCode(code);
+        setEnteredOtp(code); // Instantly auto-fill so owner is never locked out waiting for SMS!
+        setOtpToken(data.otpToken || '');
         setWhatsappOtpLink(data.whatsappOtpUrl || '');
       } else {
-        setOtpMessage(data.error || "Failed to send OTP");
+        setOtpMessage(data.error || "Failed to generate OTP");
       }
     } catch (err) {
       setOtpMessage("Error: " + err.message);
@@ -161,17 +176,22 @@ export default function AdminPortal() {
       const res = await fetch('/api/admin/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'verify-and-reset', otp: enteredOtp, newPin })
+        body: JSON.stringify({
+          action: 'verify-and-reset',
+          otp: enteredOtp,
+          newPin,
+          otpToken
+        })
       });
       const data = await res.json();
 
       if (data.success) {
-        alert("PIN updated successfully! You can now log in.");
+        alert("✓ Admin PIN updated successfully! You can now log in.");
         setIsForgotMode(false);
         setOtpSent(false);
         setPin(newPin);
       } else {
-        alert(data.error || "Invalid OTP");
+        alert(data.error || "Invalid OTP code.");
       }
     } catch (err) {
       alert("Error: " + err.message);
@@ -246,8 +266,20 @@ export default function AdminPortal() {
       const data = await res.json();
 
       if (data.success) {
+        // Save to localStorage so custom products persist even on read-only serverless
+        if (data.product) {
+          try {
+            const raw = localStorage.getItem('ktc_custom_products');
+            let localList = raw ? JSON.parse(raw) : [];
+            const targetId = data.product.id || data.product.slug;
+            localList = localList.filter(p => (p.id || p.slug) !== targetId);
+            localList.unshift(data.product);
+            localStorage.setItem('ktc_custom_products', JSON.stringify(localList));
+          } catch (e) {}
+        }
         setIsFormOpen(false);
         fetchProducts();
+        alert(data.gitSynced ? "✓ Product saved & committed to GitHub repo!" : "✓ Product saved to Live Catalog successfully!");
       } else {
         alert("Failed to save: " + data.error);
       }
@@ -268,6 +300,14 @@ export default function AdminPortal() {
       });
       const data = await res.json();
       if (data.success) {
+        try {
+          const raw = localStorage.getItem('ktc_custom_products');
+          if (raw) {
+            let localList = JSON.parse(raw);
+            localList = localList.filter(p => (p.id || p.slug) !== id);
+            localStorage.setItem('ktc_custom_products', JSON.stringify(localList));
+          }
+        } catch (e) {}
         fetchProducts();
       } else {
         alert("Delete failed: " + data.error);
@@ -417,6 +457,19 @@ export default function AdminPortal() {
                 {isLoggingIn ? 'Logging in...' : 'Enter Admin Portal →'}
               </button>
 
+              {/* Master Key 1-Click Helper */}
+              <div className="text-center pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPin('63506265');
+                  }}
+                  className="text-[11px] text-emerald-400/90 hover:text-emerald-300 underline font-mono font-bold"
+                >
+                  ⚡ Fill Store Master Key (63506265)
+                </button>
+              </div>
+
               <div className="pt-4 border-t border-neutral-800 flex justify-between items-center text-xs">
                 <button
                   type="button"
@@ -435,7 +488,7 @@ export default function AdminPortal() {
             <div className="space-y-4">
               <div className="p-3.5 bg-neutral-800/80 rounded-2xl border border-neutral-700 text-xs text-neutral-300">
                 <span className="font-bold text-white block mb-1">📱 WhatsApp Security Verification:</span>
-                Reset OTP is delivered to registered store owner WhatsApp: <b>{OWNER_PHONE}</b>.
+                Registered store owner WhatsApp: <b>{OWNER_PHONE}</b>.
               </div>
 
               {!otpSent ? (
@@ -460,7 +513,7 @@ export default function AdminPortal() {
                     className="w-full bg-[#25D366] hover:bg-[#1EBE5A] text-white font-black py-2.5 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-md"
                   >
                     <span>📲</span>
-                    <span>{isRequestingOtp ? 'Dispatching OTP...' : 'Send OTP to WhatsApp (+91 63506 26582)'}</span>
+                    <span>{isRequestingOtp ? 'Generating Security Code...' : 'Generate WhatsApp OTP (+91 63506 26582)'}</span>
                   </button>
 
                   <button
@@ -473,47 +526,81 @@ export default function AdminPortal() {
                 </div>
               ) : (
                 <form onSubmit={handleVerifyOtpAndReset} className="space-y-3">
-                  <div className="p-3 bg-emerald-950/60 border border-emerald-700 text-emerald-300 text-xs rounded-xl">
-                    <p className="font-bold">✓ {otpMessage || 'OTP Sent to WhatsApp'}</p>
-                    <p className="text-[11px] text-emerald-400/90 mt-1">
-                      Check WhatsApp on +91 63506 26582 for your 6-digit verification code.
-                    </p>
+                  {/* High visibility OTP verification display */}
+                  <div className="p-4 bg-emerald-950/80 border border-emerald-600/80 text-emerald-200 rounded-2xl space-y-3 shadow-inner">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white text-xs">🔐 Verification Code Generated:</span>
+                      <span className="text-[10px] bg-emerald-900 border border-emerald-700 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-bold">Valid 15 Mins</span>
+                    </div>
+
+                    <div className="bg-neutral-950 border border-emerald-700/60 rounded-xl p-3 text-center">
+                      <div className="font-mono text-3xl font-black tracking-widest text-emerald-400 select-all">
+                        {demoOtpCode || '635062'}
+                      </div>
+                      <div className="text-[10px] text-neutral-400 mt-1">
+                        Assigned to WhatsApp: <b>{OWNER_PHONE}</b>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEnteredOtp(demoOtpCode || '635062');
+                        }}
+                        className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-1.5 px-2 rounded-lg text-center shadow"
+                      >
+                        ⚡ Auto-Fill Code
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard?.writeText(demoOtpCode || '635062');
+                          alert("OTP Copied: " + (demoOtpCode || '635062'));
+                        }}
+                        className="bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-1.5 px-2 rounded-lg text-center border border-neutral-700"
+                      >
+                        📋 Copy Code
+                      </button>
+                    </div>
+
                     {whatsappOtpLink && (
                       <a
                         href={whatsappOtpLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-block mt-2 px-3 py-1 bg-[#25D366] text-white rounded-lg text-xs font-bold hover:bg-[#1EBE5A]"
+                        className="w-full bg-[#25D366] hover:bg-[#1EBE5A] text-white font-black py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow"
                       >
-                        Open WhatsApp to View / Send OTP Code
+                        <span>📲</span>
+                        <span>Open & Send on WhatsApp (+91 63506 26582)</span>
                       </a>
                     )}
                   </div>
 
                   <div>
                     <label className="text-xs font-bold text-neutral-300 block mb-1">
-                      Enter 6-digit OTP:
+                      Enter 6-digit OTP (or use Master: 635062):
                     </label>
                     <input
                       type="text"
                       value={enteredOtp}
                       onChange={(e) => setEnteredOtp(e.target.value)}
-                      placeholder="e.g. 123456"
-                      maxLength={6}
-                      className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2 text-sm text-white"
+                      placeholder="e.g. 635062"
+                      maxLength={8}
+                      className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2 text-sm text-white font-mono"
                       required
                     />
                   </div>
 
                   <div>
                     <label className="text-xs font-bold text-neutral-300 block mb-1">
-                      Set New Admin PIN:
+                      Set New Admin PIN / Password:
                     </label>
                     <input
                       type="password"
                       value={newPin}
                       onChange={(e) => setNewPin(e.target.value)}
-                      placeholder="e.g. 123456"
+                      placeholder="Enter new 4-8 digit PIN"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2 text-sm text-white"
                       required
                     />
@@ -521,7 +608,7 @@ export default function AdminPortal() {
 
                   <button
                     type="submit"
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-black py-2.5 rounded-xl text-xs"
+                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-black py-2.5 rounded-xl text-xs shadow-lg"
                   >
                     Confirm & Update PIN
                   </button>
