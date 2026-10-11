@@ -1,7 +1,26 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useSyncExternalStore } from 'react';
 import AiTryOnStudio from './components/AiTryOnStudio';
+
+function subscribeCustomProducts(callback) {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
+
+function getCustomProductsSnapshot() {
+  if (typeof window === 'undefined') return '';
+  try {
+    return localStorage.getItem('ktc_custom_products') || '';
+  } catch {
+    return '';
+  }
+}
+
+function getServerSnapshot() {
+  return '';
+}
 import BoutiqueRoiCalculator from './components/BoutiqueRoiCalculator';
 import AiChatbot from './components/AiChatbot';
 import UserAuthModal from './components/UserAuthModal';
@@ -98,31 +117,27 @@ export default function Storefront({ products = [] }) {
   ];
 
   // Live products state synced with server and localStorage
-  const [liveProducts, setLiveProducts] = useState(products);
+  const customProductsRaw = useSyncExternalStore(
+    subscribeCustomProducts,
+    getCustomProductsSnapshot,
+    getServerSnapshot
+  );
 
-  useEffect(() => {
+  const liveProducts = useMemo(() => {
+    if (!customProductsRaw) return products;
     try {
-      const raw = localStorage.getItem('ktc_custom_products');
-      if (raw) {
-        const custom = JSON.parse(raw);
-        if (Array.isArray(custom) && custom.length > 0) {
-          const map = new Map();
-          products.forEach(p => map.set(p.id || p.slug, p));
-          custom.forEach(p => map.set(p.id || p.slug, p));
-          setLiveProducts(Array.from(map.values()));
-          return;
-        }
+      const custom = JSON.parse(customProductsRaw);
+      if (Array.isArray(custom) && custom.length > 0) {
+        const map = new Map();
+        products.forEach(p => map.set(p.id || p.slug, p));
+        custom.forEach(p => map.set(p.id || p.slug, p));
+        return Array.from(map.values());
       }
-    } catch (e) {}
-    setLiveProducts(products);
-  }, [products]);
+    } catch {}
+    return products;
+  }, [products, customProductsRaw]);
 
-  // Initialize defaults for studio
-  useEffect(() => {
-    if (liveProducts.length > 0 && !studioSelectedProduct) {
-      setStudioSelectedProduct(liveProducts[0]);
-    }
-  }, [liveProducts, studioSelectedProduct]);
+  const activeStudioProduct = studioSelectedProduct || liveProducts[0] || null;
 
   // AI Natural Language Search & Filter Logic
   const filteredProducts = useMemo(() => {
@@ -177,7 +192,7 @@ export default function Storefront({ products = [] }) {
     }
 
     return filtered;
-  }, [products, searchQuery, activeCategory, purchaseMode, sortBy]);
+  }, [liveProducts, searchQuery, activeCategory, purchaseMode, sortBy]);
 
   // Helper to get image source for product (supporting specific color variant images)
   const getProductImage = (product, isAi, colorIndex = 0) => {
@@ -356,7 +371,7 @@ export default function Storefront({ products = [] }) {
                 </span>
               </div>
               <span className="text-[10px] tracking-wider uppercase font-semibold text-gray-500">
-                Women's & Girls' Apparel Wholesale B2B
+                Women&apos;s &amp; Girls&apos; Apparel Wholesale B2B
               </span>
             </div>
 
@@ -580,7 +595,7 @@ export default function Storefront({ products = [] }) {
 
         {isVoiceListening && (
           <div className="mt-2 text-center text-xs font-bold text-red-600 bg-red-50 py-1 px-3 rounded-full border border-red-200 inline-block mx-auto animate-pulse">
-            🎙️ Listening... Speak style or budget (e.g. "Ethnic under 1000")
+            🎙️ Listening... Speak style or budget (e.g. &quot;Ethnic under 1000&quot;)
           </div>
         )}
 
@@ -669,7 +684,7 @@ export default function Storefront({ products = [] }) {
           <div>
             Showing <span className="text-gray-900 font-bold">{filteredProducts.length}</span> {purchaseMode} product lots
             {activeCategory !== "All Collections" && <span> in <span className="text-black font-bold">{activeCategory}</span></span>}
-            {searchQuery && <span> matching "<span className="text-black font-bold">{searchQuery}</span>"</span>}
+            {searchQuery && <span> matching &ldquo;<span className="text-black font-bold">{searchQuery}</span>&rdquo;</span>}
           </div>
           {(activeCategory !== "All Collections" || searchQuery) && (
             <button
@@ -1021,7 +1036,7 @@ export default function Storefront({ products = [] }) {
                   <div className="text-center py-20 text-gray-400">
                     <span className="text-4xl block mb-2">🛍️</span>
                     <p className="text-sm font-semibold text-gray-600">Your bulk quote is empty</p>
-                    <p className="text-xs text-gray-400 mt-1">Tap "+ Add to Bulk PO" on products to build a quotation.</p>
+                    <p className="text-xs text-gray-400 mt-1">Tap &ldquo;+ Add to Bulk PO&rdquo; on products to build a quotation.</p>
                   </div>
                 ) : (
                   quoteItems.map((item, idx) => (
@@ -1228,8 +1243,8 @@ export default function Storefront({ products = [] }) {
       <AiTryOnStudio
         isOpen={isAiStudioOpen}
         onClose={() => setIsAiStudioOpen(false)}
-        products={products}
-        initialProduct={studioSelectedProduct}
+        products={liveProducts}
+        initialProduct={activeStudioProduct}
         whatsappNumber={WHATSAPP_NUMBER}
         onAddToQuote={(prod) => addToQuote(prod)}
       />

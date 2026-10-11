@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 
 // Curated photorealistic Indian & Western model archetypes
 const STUDIO_MODELS = [
@@ -89,7 +89,9 @@ export default function AiTryOnStudio({
   const sliderContainerRef = useRef(null);
 
   // Sync initial product if changed externally
-  useEffect(() => {
+  const [prevInitialProduct, setPrevInitialProduct] = useState(initialProduct);
+  if (initialProduct !== prevInitialProduct) {
+    setPrevInitialProduct(initialProduct);
     if (initialProduct) {
       setSelectedProduct(initialProduct);
       setGeneratedResult(null);
@@ -97,7 +99,7 @@ export default function AiTryOnStudio({
       const match = STUDIO_MODELS.find(m => m.category === initialProduct.category);
       if (match) setSelectedModel(match);
     }
-  }, [initialProduct]);
+  }
 
   if (!isOpen) return null;
 

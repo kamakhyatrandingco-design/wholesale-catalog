@@ -91,8 +91,8 @@ export async function putFile(filePath, content, message, sha = null) {
     content: Buffer.from(content, 'utf8').toString('base64'),
     branch,
     committer: {
-      name: 'hariomjoshi45',
-      email: 'harijoshi215@gmail.com',
+      name: process.env.GITHUB_COMMITTER_NAME || 'hariomjoshi45',
+      email: process.env.GITHUB_COMMITTER_EMAIL || 'harijoshi215@gmail.com',
     },
   };
   if (sha) body.sha = sha;
@@ -123,8 +123,8 @@ export async function deleteFile(filePath, sha, message) {
     sha,
     branch,
     committer: {
-      name: 'hariomjoshi45',
-      email: 'harijoshi215@gmail.com',
+      name: process.env.GITHUB_COMMITTER_NAME || 'hariomjoshi45',
+      email: process.env.GITHUB_COMMITTER_EMAIL || 'harijoshi215@gmail.com',
     },
   };
 

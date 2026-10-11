@@ -1,36 +1,138 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Kamakhya Trading Co (KTC) — Wholesale B2B Fashion Catalog
 
-## Getting Started
+[![Next.js](https://img.shields.io/badge/Next.js-16.3.4-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.8-blue?logo=react)](https://react.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-Private-red)]()
 
-First, run the development server:
+A high-performance B2B Wholesale Apparel Storefront and Admin Management Portal designed for **Kamakhya Trading Co**, providing direct factory manufacturing rates for boutiques, wholesalers, and retail buyers across India.
 
+---
+
+## 🌟 Key Features
+
+### 🛍️ Dual-Mode Storefront
+- **Wholesale Mode (Default)**: Displays direct mill manufacturing rates, bulk lot pricing, and minimum order quantities (MOQ 25–50 pieces).
+- **Retail Sample Mode**: Single-piece pricing for personal buyers and boutique owners inspecting fabric, stitching, and finishing quality.
+
+### ✨ AI Virtual Try-On Studio
+- Interactive **Photorealistic Model Try-On** with 5 curated Indian & Western model archetypes (Ethnic, Bridal, Western, Partywear, Loungewear).
+- **Interactive Split Slider**: Real-time visual comparison between flat catalog garments and neural model drape.
+- **Custom Buyer Photo Upload**: Test garments on client-provided model photos.
+- Automatic category fallback and color variant switching.
+
+### 🎙️ AI Voice & Natural Language Search
+- Smart search engine that extracts pricing constraints and category intents from natural queries (e.g., *"Ethnic under 1000"*, *"Bulk sets below 600"*, *"Free Size"*).
+- Integrated **Web Speech API** for voice dictation in Chrome, Edge, and mobile browsers.
+
+### 🤖 Bilingual AI Wholesale Chatbot
+- Embedded AI Assistant fluent in **English and Hindi (हिंग्लिश)**.
+- Answers buyer inquiries about fabric materials (Chanderi, Georgette, Velvet, Rayon Slub), MOQs, transport logistics, and GST invoicing.
+- Text-to-Speech voice synthesis support.
+
+### 📲 WhatsApp B2B Quotations & Order Assembling
+- Multi-item **Bulk Purchase Order (PO) Drawer**: Add multiple garments, color variants, and size curves.
+- Instant pre-formatted **WhatsApp Proforma Invoices** sent directly to factory dispatch (`+91 63506 26582`).
+
+### 📊 Boutique Margin & Profit ROI Calculator
+- Interactive simulations of wholesale cost vs projected retail revenue (50% to 140% margin).
+- Pre-configured assortments: *Starter Assortment*, *Festive Super-Lot*, *Bridal Premium*, and *Girls Partywear Special*.
+
+### 👤 Buyer Portal & Restock Requests
+- Persistent buyer session with shop name, contact, and city.
+- Direct **Urgent Restock Request** pipeline generating factory production priority tickets.
+
+### 🔐 Secure Admin Management Portal
+- Protected with PIN and stateless HMAC-signed WhatsApp OTP recovery.
+- Full product catalog CRUD operations: title, SKU, wholesale/retail prices, MOQ, fabric, size curves, and color variants.
+- **Serverless GitHub Contents API Integration**: Creates, updates, and deletes markdown files by committing directly to the GitHub repository, circumventing read-only filesystem limitations (EROFS) on Netlify/Vercel.
+
+---
+
+## 🏗️ Tech Stack
+
+- **Framework**: [Next.js 16 (Turbopack)](https://nextjs.org/)
+- **UI & State**: [React 19](https://react.dev/), `useSyncExternalStore` for external storage reactivity
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Content Storage**: Markdown frontmatter parsed via `gray-matter`
+- **Data Persistence**: GitHub REST Contents API + local client state cache fallback
+- **AI Integration**: Gradio client for Hugging Face `IDM-VTON` with real-time neural fallback
+
+---
+
+## 🚀 Quick Start
+
+### 1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/kamakhyatrandingco-design/wholesale-catalog.git
+cd wholesale-catalog
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### 3. Configure environment variables
+Copy `.env.example` to `.env.local`:
+```bash
+cp .env.example .env.local
+```
+Fill in the required tokens (see [Environment Variables](#environment-variables) below).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Run development server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to view the storefront, or [http://localhost:3000/admin](http://localhost:3000/admin) for the admin portal.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## ⚙️ Environment Variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable | Description | Default / Example |
+|---|---|---|
+| `GITHUB_TOKEN` | GitHub Personal Access Token with `Contents: Read & Write` scope | `ghp_...` |
+| `GITHUB_REPO_OWNER` | GitHub organization / username | `kamakhyatrandingco-design` |
+| `GITHUB_REPO_NAME` | Repository name | `wholesale-catalog` |
+| `GITHUB_BRANCH` | Target branch for automated commits | `main` |
+| `ADMIN_PIN` | Master Admin PIN for portal login | `63506265` |
+| `ADMIN_SECRET` | Secret salt for stateless HMAC OTP verification | `ktc-admin-key-63506265` |
+| `NEXT_PUBLIC_SHOP_NAME` | Storefront branding display name | `Kamakhya Trading Co` |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Factory WhatsApp contact number (with country code) | `916350626582` |
+| `HUGGINGFACE_TOKEN` | (Optional) Hugging Face token for remote GPU try-on | `hf_...` |
+| `GITHUB_CLIENT_ID` | (Optional) GitHub OAuth Client ID | — |
+| `GITHUB_CLIENT_SECRET` | (Optional) GitHub OAuth Client Secret | — |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🚢 Netlify Production Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Connect the repository to **Netlify**.
+2. Netlify will detect `netlify.toml` and configure the Next.js runtime.
+3. In **Site Configuration > Environment Variables**, add:
+   - `GITHUB_TOKEN` (fine-grained PAT with Contents read/write)
+   - `GITHUB_REPO_OWNER` = `kamakhyatrandingco-design`
+   - `GITHUB_REPO_NAME` = `wholesale-catalog`
+   - `GITHUB_BRANCH` = `main`
+   - `ADMIN_PIN` = `63506265`
+   - `ADMIN_SECRET` = your secret string
+4. Trigger deploy. The application will build cleanly and serve static routes with dynamic API functions.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🛠️ Verification & Quality Checks
+
+Run linting:
+```bash
+npm run lint
+```
+
+Run production build:
+```bash
+npm run build
+```
+
+---
+
+© 2026 Kamakhya Trading Co. All rights reserved.
