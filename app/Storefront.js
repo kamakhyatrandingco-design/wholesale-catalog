@@ -97,12 +97,32 @@ export default function Storefront({ products = [] }) {
     "Loungewear"
   ];
 
+  // Live products state synced with server and localStorage
+  const [liveProducts, setLiveProducts] = useState(products);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('ktc_custom_products');
+      if (raw) {
+        const custom = JSON.parse(raw);
+        if (Array.isArray(custom) && custom.length > 0) {
+          const map = new Map();
+          products.forEach(p => map.set(p.id || p.slug, p));
+          custom.forEach(p => map.set(p.id || p.slug, p));
+          setLiveProducts(Array.from(map.values()));
+          return;
+        }
+      }
+    } catch (e) {}
+    setLiveProducts(products);
+  }, [products]);
+
   // Initialize defaults for studio
   useEffect(() => {
-    if (products.length > 0 && !studioSelectedProduct) {
-      setStudioSelectedProduct(products[0]);
+    if (liveProducts.length > 0 && !studioSelectedProduct) {
+      setStudioSelectedProduct(liveProducts[0]);
     }
-  }, [products, studioSelectedProduct]);
+  }, [liveProducts, studioSelectedProduct]);
 
   // AI Natural Language Search & Filter Logic
   const filteredProducts = useMemo(() => {
@@ -118,7 +138,7 @@ export default function Storefront({ products = [] }) {
     // Clean query text without the price constraint phrase
     const cleanQuery = query.replace(/(?:under|below|<|less than|max)\s*(?:rs\.?|inr|₹)?\s*\d+/gi, '').trim();
 
-    const filtered = products.filter((product) => {
+    const filtered = liveProducts.filter((product) => {
       // Category match
       const matchesCategory =
         activeCategory === "All Collections" || product.category === activeCategory;
@@ -1237,7 +1257,7 @@ export default function Storefront({ products = [] }) {
 
       {/* 15. REAL MULTILINGUAL VOICE AI CHATBOT (Hindi / English / Voice) */}
       <AiChatbot
-        products={products}
+        products={liveProducts}
         onOpenTryOn={(p) => {
           setStudioSelectedProduct(p);
           setIsAiStudioOpen(true);
