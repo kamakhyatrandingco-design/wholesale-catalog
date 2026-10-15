@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "microservices": "node scripts/start-microservices.js",
+    "service:gateway": "node services/api-gateway/server.js",
+    "service:catalog": "node services/catalog-service/server.js",
+    "service:auth": "node services/auth-service/server.js",
+    "service:order": "node services/order-service/server.js",
+    "service:ai": "python services/ai-service/main.py"
   },
   "dependencies": {
     "@gradio/client": "^2.5.1",

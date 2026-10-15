@@ -1,0 +1,10 @@
+{
+  "name": "ktc-order-service",
+  "version": "1.0.0",
+  "description": "Order processing, volume discount engine, and proforma generator microservice for Kamakhya Trading Co",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  }
+}

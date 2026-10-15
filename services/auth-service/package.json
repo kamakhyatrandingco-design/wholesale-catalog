@@ -1,0 +1,10 @@
+{
+  "name": "ktc-auth-service",
+  "version": "1.0.0",
+  "description": "Decoupled auth and boutique profile microservice for Kamakhya Trading Co",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  }
+}
