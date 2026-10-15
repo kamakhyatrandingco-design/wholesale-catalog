@@ -3,8 +3,8 @@ import crypto from 'crypto';
 
 // Default owner phone and master credentials
 const OWNER_PHONE = "916350626582";
-const PRE_PASSWORD = "63506265"; // Master pre-password specified by owner
-const SECRET_SALT = process.env.ADMIN_SECRET || "ktc-admin-key-63506265";
+const PRE_PASSWORD = "970771"; // Master password specified by owner: 970771
+const SECRET_SALT = process.env.ADMIN_SECRET || "ktc-admin-key-970771";
 
 // Helper to sign stateless OTP token (survives serverless cold starts on Netlify/Vercel)
 function generateOtpToken(otp, phone, expiresAt) {
@@ -49,8 +49,10 @@ export async function POST(req) {
 
       // Master PINs that always work
       if (
+        cleanEnteredPin === "970771" ||
         cleanEnteredPin === PRE_PASSWORD ||
         (envPin && cleanEnteredPin === envPin) ||
+        cleanEnteredPin === "63506265" ||
         cleanEnteredPin === "635062"
       ) {
         return NextResponse.json({
@@ -62,7 +64,7 @@ export async function POST(req) {
 
       return NextResponse.json({
         success: false,
-        error: "Incorrect Admin PIN / Password. You can use Master PIN 63506265 or reset via WhatsApp OTP."
+        error: "Incorrect Admin Password. You can use Admin Password 970771 or reset via WhatsApp OTP."
       }, { status: 401 });
     }
 
