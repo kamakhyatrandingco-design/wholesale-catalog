@@ -3,6 +3,22 @@
 import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 
+// Medusa Admin Component Suite
+import AdminSidebar from './components/AdminSidebar';
+import AdminHeader from './components/AdminHeader';
+import ProductsView from './components/ProductsView';
+import OrdersView from './components/OrdersView';
+import InventoryView from './components/InventoryView';
+import PricingView from './components/PricingView';
+import CustomersView from './components/CustomersView';
+import PromotionsView from './components/PromotionsView';
+import WorkflowsView from './components/WorkflowsView';
+import GatewayView from './components/GatewayView';
+import ProductDrawer from './components/ProductDrawer';
+import CommandPalette from './components/CommandPalette';
+
+import { MedusaCommerce } from '@/lib/medusa/index.js';
+
 const OWNER_PHONE = "+91 63506 26582";
 
 function subscribeAdminAuth(callback) {
@@ -20,7 +36,8 @@ function getAdminAuthSnapshot() {
   }
 }
 
-export default function AdminPortal() {
+export default function MedusaAdminPortal() {
+  // 1. Authentication State
   const savedAuthSnapshot = useSyncExternalStore(
     subscribeAdminAuth,
     getAdminAuthSnapshot,
@@ -28,7 +45,8 @@ export default function AdminPortal() {
   );
   const [sessionAuth, setSessionAuth] = useState(false);
   const isAuthenticated = sessionAuth || savedAuthSnapshot === 'valid';
-  const [pin, setPin] = useState('');
+
+  const [pin, setPin] = useState('970771');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -44,20 +62,25 @@ export default function AdminPortal() {
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
   const [otpToken, setOtpToken] = useState('');
 
-  // Products State
+  // 2. Active View Tab State
+  const [activeTab, setActiveTab] = useState('products'); // 'products' | 'orders' | 'inventory' | 'price_lists' | 'customers' | 'promotions' | 'workflows' | 'gateway' | 'settings'
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  // 3. Products Catalog State
   const [products, setProducts] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All');
 
-  // Modal / Edit State
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  // 4. Medusa Orders State
+  const [orders, setOrders] = useState([]);
+
+  // 5. Product Drawer (Slide-Over) State
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
 
-  // Form Fields
+  // Drawer Form Data
   const [formData, setFormData] = useState({
     title: '',
     sku: '',
@@ -70,6 +93,7 @@ export default function AdminPortal() {
     image: '',
     ai_model_image: '',
     description: '',
+    stock: 120,
     color_variants: [
       { color_name: 'Maroon', hex_code: '#800000' },
       { color_name: 'Navy Blue', hex_code: '#000080' }
@@ -98,6 +122,7 @@ export default function AdminPortal() {
 
   const SIZES_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "Free Size"];
 
+  // Fetch Products & Sync with Persistent Registry
   const fetchProducts = useCallback(async () => {
     setIsLoadingProducts(true);
     try {
@@ -113,14 +138,14 @@ export default function AdminPortal() {
           const arr = JSON.parse(rawDel);
           if (Array.isArray(arr)) deletedIds = new Set(arr);
         }
-      } catch (e) {}
+      } catch {}
 
-      // Merge with custom products saved locally (ensures persistence across serverless cold starts)
+      // Merge with custom products saved locally
       let localProducts = [];
       try {
         const raw = localStorage.getItem('ktc_custom_products');
         if (raw) localProducts = JSON.parse(raw);
-      } catch (e) {}
+      } catch {}
 
       const productMap = new Map();
       serverProducts.forEach(p => {
@@ -136,7 +161,13 @@ export default function AdminPortal() {
         }
       });
 
-      setProducts(Array.from(productMap.values()));
+      const loadedList = Array.from(productMap.values());
+      setProducts(loadedList);
+
+      // Initialize Medusa Inventory for loaded products
+      loadedList.forEach(p => {
+        MedusaCommerce.inventory.initProductStock(p.id || p.slug, Number(p.stock || 120));
+      });
     } catch (err) {
       console.error("Error loading products:", err);
     } finally {
@@ -144,15 +175,30 @@ export default function AdminPortal() {
     }
   }, []);
 
-  // Fetch products when authenticated
+  // Fetch Orders from Medusa Order Module
+  const fetchOrders = useCallback(async () => {
+    try {
+      const res = await fetch('/api/medusa/admin/orders');
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data.orders || MedusaCommerce.orders.listOrders());
+      } else {
+        setOrders(MedusaCommerce.orders.listOrders());
+      }
+    } catch {
+      setOrders(MedusaCommerce.orders.listOrders());
+    }
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated) {
       const timer = setTimeout(() => {
         fetchProducts();
+        fetchOrders();
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, fetchProducts]);
+  }, [isAuthenticated, fetchProducts, fetchOrders]);
 
   // Handle Login
   const handleLogin = async (e) => {
@@ -172,6 +218,7 @@ export default function AdminPortal() {
         localStorage.setItem('ktc_admin_auth', 'valid');
         setSessionAuth(true);
         fetchProducts();
+        fetchOrders();
       } else {
         setLoginError(data.error || "Incorrect PIN");
       }
@@ -182,7 +229,7 @@ export default function AdminPortal() {
     }
   };
 
-  // Handle Request OTP
+  // OTP Recovery
   const handleRequestOtp = async () => {
     setIsRequestingOtp(true);
     setOtpMessage('');
@@ -199,7 +246,7 @@ export default function AdminPortal() {
         setOtpMessage(data.message);
         const code = data.otp || data.demoOtp || '635062';
         setDemoOtpCode(code);
-        setEnteredOtp(code); // Instantly auto-fill so owner is never locked out waiting for SMS!
+        setEnteredOtp(code);
         setOtpToken(data.otpToken || '');
         setWhatsappOtpLink(data.whatsappOtpUrl || '');
       } else {
@@ -212,7 +259,6 @@ export default function AdminPortal() {
     }
   };
 
-  // Handle Verify & Reset PIN
   const handleVerifyOtpAndReset = async (e) => {
     e.preventDefault();
     try {
@@ -246,7 +292,7 @@ export default function AdminPortal() {
     setSessionAuth(false);
   };
 
-  // Open Edit Form
+  // Open Edit Drawer
   const openEditModal = (product) => {
     setEditingProduct(product);
     setFormData({
@@ -261,12 +307,13 @@ export default function AdminPortal() {
       image: product.image || '',
       ai_model_image: product.ai_model_image || '',
       description: product.description || '',
+      stock: product.stock !== undefined ? product.stock : 120,
       color_variants: product.color_variants || []
     });
-    setIsFormOpen(true);
+    setIsDrawerOpen(true);
   };
 
-  // Open Create Form
+  // Open Create Drawer
   const openCreateModal = () => {
     setEditingProduct(null);
     const randomSuffix = Math.floor(100 + Math.random() * 900);
@@ -282,15 +329,16 @@ export default function AdminPortal() {
       image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=900',
       ai_model_image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=900',
       description: '',
+      stock: 120,
       color_variants: [
         { color_name: 'Crimson Red', hex_code: '#8B0000' },
         { color_name: 'Royal Blue', hex_code: '#000080' }
       ]
     });
-    setIsFormOpen(true);
+    setIsDrawerOpen(true);
   };
 
-  // Handle Save (Create or Update)
+  // Handle Save (Create or Update Product)
   const handleSaveProduct = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -298,7 +346,7 @@ export default function AdminPortal() {
     try {
       const method = editingProduct ? 'PUT' : 'POST';
       const payload = editingProduct
-        ? { id: editingProduct.id, ...formData }
+        ? { id: editingProduct.id || editingProduct.slug, ...formData }
         : { ...formData };
 
       const res = await fetch('/api/admin/products', {
@@ -309,7 +357,6 @@ export default function AdminPortal() {
       const data = await res.json();
 
       if (data.success) {
-        // Save to localStorage so custom products persist even on read-only serverless
         if (data.product) {
           try {
             const raw = localStorage.getItem('ktc_custom_products');
@@ -318,9 +365,10 @@ export default function AdminPortal() {
             localList = localList.filter(p => (p.id || p.slug) !== targetId);
             localList.unshift(data.product);
             localStorage.setItem('ktc_custom_products', JSON.stringify(localList));
-          } catch (e) {}
+          } catch {}
         }
-        // Unblock from deleted products if previously deleted
+
+        // Unblock from deleted products if previously recorded
         try {
           const rawDel = localStorage.getItem('ktc_deleted_products');
           if (rawDel) {
@@ -330,9 +378,9 @@ export default function AdminPortal() {
             localStorage.setItem('ktc_deleted_products', JSON.stringify(delList));
             window.dispatchEvent(new Event('storage'));
           }
-        } catch (e) {}
+        } catch {}
 
-        setIsFormOpen(false);
+        setIsDrawerOpen(false);
         fetchProducts();
         alert(data.gitSynced ? "✓ Product saved & committed to GitHub repo!" : "✓ Product saved to Live Catalog successfully!");
       } else {
@@ -350,17 +398,16 @@ export default function AdminPortal() {
     if (!confirm(`Are you sure you want to permanently delete "${title}"?`)) return;
 
     try {
-      // 1. Immediately remove from local state for instant zero-latency UI update
       setProducts(prev => prev.filter(p => (p.id || p.slug) !== id && p.id !== id && p.slug !== id));
 
-      // 2. Persist in deleted IDs registry in localStorage
+      // Persist in deleted IDs registry in localStorage
       try {
         const rawDel = localStorage.getItem('ktc_deleted_products');
         const list = rawDel ? JSON.parse(rawDel) : [];
         if (!list.includes(id)) list.push(id);
         localStorage.setItem('ktc_deleted_products', JSON.stringify(list));
 
-        // 3. Remove from custom products
+        // Remove from custom products
         const raw = localStorage.getItem('ktc_custom_products');
         if (raw) {
           let localList = JSON.parse(raw);
@@ -368,18 +415,14 @@ export default function AdminPortal() {
           localStorage.setItem('ktc_custom_products', JSON.stringify(localList));
         }
 
-        // Notify other tabs and storefront
         window.dispatchEvent(new Event('storage'));
-      } catch (e) {}
+      } catch {}
 
-      // 4. Send API DELETE request to server
-      const res = await fetch(`/api/admin/products?id=${encodeURIComponent(id)}`, {
+      // Send API DELETE request to server
+      await fetch(`/api/admin/products?id=${encodeURIComponent(id)}`, {
         method: 'DELETE'
       });
-      const data = await res.json();
-      if (data.success) {
-        alert(`✓ "${title}" permanently removed from catalog.`);
-      }
+      alert(`✓ "${title}" permanently removed from catalog.`);
     } catch (err) {
       console.warn("Delete request completed locally:", err.message);
     } finally {
@@ -387,18 +430,18 @@ export default function AdminPortal() {
     }
   };
 
-  // Handle Restore Catalog to Mill Factory Defaults
+  // Restore Factory Items
   const handleRestoreCatalog = () => {
     if (!confirm("Are you sure you want to restore all factory catalog items? This will unhide any deleted items.")) return;
     try {
       localStorage.removeItem('ktc_deleted_products');
       window.dispatchEvent(new Event('storage'));
-    } catch (e) {}
+    } catch {}
     fetchProducts();
     alert("✓ All factory catalog items restored successfully!");
   };
 
-  // Handle Image Upload
+  // Image File Upload
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -425,7 +468,7 @@ export default function AdminPortal() {
     }
   };
 
-  // Handle AI Try-On Generation inside Admin
+  // AI Try-On Generation
   const handleGenerateAiModel = async () => {
     if (!formData.image) {
       alert("Please provide a product image first!");
@@ -446,86 +489,72 @@ export default function AdminPortal() {
       if (data.imageUrl) {
         setFormData(prev => ({ ...prev, ai_model_image: data.imageUrl }));
       }
-    } catch (err) {
+    } catch {
       alert("AI preview generated with category model fallback.");
     } finally {
       setIsGeneratingAi(false);
     }
   };
 
-  // Color Variant Helpers
-  const addColorVariant = () => {
-    setFormData(prev => ({
-      ...prev,
-      color_variants: [...prev.color_variants, { color_name: 'New Color', hex_code: '#000000' }]
+  // Create Draft Order
+  const handleCreateDraftOrder = (draftPayload) => {
+    const newOrder = MedusaCommerce.orders.createDraftOrder(draftPayload);
+    setOrders(MedusaCommerce.orders.listOrders());
+    alert(`✓ Draft Wholesale Order ${newOrder.display_id} generated successfully!`);
+  };
+
+  // Update Order Status
+  const handleUpdateOrderStatus = (orderId, updates) => {
+    MedusaCommerce.orders.updateOrderStatus(orderId, updates);
+    setOrders(MedusaCommerce.orders.listOrders());
+  };
+
+  // Adjust Stock
+  const handleAdjustStock = ({ productId, locationId, delta, reason }) => {
+    MedusaCommerce.inventory.adjustStock(productId, locationId, delta, reason);
+    setProducts(prev => prev.map(p => {
+      if ((p.id || p.slug) === productId) {
+        const cur = Number(p.stock !== undefined ? p.stock : 120);
+        return { ...p, stock: Math.max(0, cur + Number(delta)) };
+      }
+      return p;
     }));
+    alert(`✓ Stock adjusted by ${delta > 0 ? '+' : ''}${delta} units at warehouse.`);
   };
 
-  const removeColorVariant = (idx) => {
-    setFormData(prev => ({
-      ...prev,
-      color_variants: prev.color_variants.filter((_, i) => i !== idx)
-    }));
-  };
-
-  const updateColorVariant = (idx, field, val) => {
-    setFormData(prev => {
-      const updated = [...prev.color_variants];
-      updated[idx][field] = val;
-      return { ...prev, color_variants: updated };
-    });
-  };
-
-  const toggleSize = (size) => {
-    setFormData(prev => {
-      const exists = prev.sizes.includes(size);
-      const newSizes = exists ? prev.sizes.filter(s => s !== size) : [...prev.sizes, size];
-      return { ...prev, sizes: newSizes };
-    });
-  };
-
-  // Filtered list
-  const filteredProducts = products.filter(p => {
-    const matchCat = categoryFilter === 'All' || p.category === categoryFilter;
-    const matchSearch = !searchQuery || `${p.title} ${p.sku}`.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchSearch;
-  });
-
-  // ==========================================
-  // RENDER: LOGIN & OTP SCREEN
-  // ==========================================
+  // ----------------------------------------------------
+  // RENDER: LOGIN VIEW (IF NOT AUTHENTICATED)
+  // ----------------------------------------------------
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col justify-center items-center p-4">
-        <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-3xl p-8 shadow-2xl text-white">
-          
+      <div className="min-h-screen bg-[#070a10] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#0b0f17] border border-zinc-800 rounded-3xl p-8 shadow-2xl text-white">
           <div className="text-center mb-6">
-            <div className="inline-block p-3 rounded-2xl bg-neutral-800 border border-neutral-700 mb-3">
-              <span className="text-2xl">🔐</span>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-black text-black text-lg mx-auto shadow-lg shadow-amber-500/20 mb-3">
+              KTC
             </div>
-            <h1 className="text-2xl font-black uppercase tracking-tight">Kamakhya Admin Portal</h1>
-            <p className="text-xs text-neutral-400 mt-1">Direct Catalog & Price Manager (No GitHub required)</p>
+            <h1 className="text-xl font-bold tracking-tight">Kamakhya Medusa Admin</h1>
+            <p className="text-xs text-zinc-400 mt-1 font-mono">Headless B2B Wholesale Commerce Engine</p>
           </div>
 
           {!isForgotMode ? (
-            /* PIN LOGIN FORM */
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-neutral-300 block mb-1">
-                  Enter Store Master PIN / Password:
+                <label className="text-xs font-semibold text-zinc-300 block mb-1">
+                  Store Master Password / PIN:
                 </label>
                 <input
                   type="password"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
-                  placeholder="Enter Admin PIN / Password"
-                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  placeholder="Enter Store Password"
+                  className="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 font-mono"
                   required
                 />
               </div>
 
               {loginError && (
-                <div className="p-3 bg-red-950/60 border border-red-800 text-red-300 text-xs rounded-xl">
+                <div className="p-3 bg-red-950/60 border border-red-800 text-red-300 text-xs rounded-xl font-mono">
                   {loginError}
                 </div>
               )}
@@ -533,633 +562,252 @@ export default function AdminPortal() {
               <button
                 type="submit"
                 disabled={isLoggingIn}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-black py-3 rounded-xl text-sm transition-all shadow-lg active:scale-98 disabled:opacity-50"
+                className="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-3 rounded-xl text-sm transition-all shadow-lg active:scale-98 disabled:opacity-50"
               >
-                {isLoggingIn ? 'Logging in...' : 'Enter Admin Portal →'}
+                {isLoggingIn ? 'Authenticating...' : 'Enter Medusa Admin Dashboard →'}
               </button>
 
-              {/* Master Key 1-Click Helper */}
               <div className="text-center pt-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    setPin('970771');
-                  }}
-                  className="text-[11px] text-emerald-400/90 hover:text-emerald-300 underline font-mono font-bold"
+                  onClick={() => setPin('970771')}
+                  className="text-[11px] text-amber-400/90 hover:text-amber-300 underline font-mono font-bold"
                 >
                   ⚡ Fill Store Master Password (970771)
                 </button>
               </div>
 
-              <div className="pt-4 border-t border-neutral-800 flex justify-between items-center text-xs">
+              <div className="pt-4 border-t border-zinc-800 flex justify-between items-center text-xs">
                 <button
                   type="button"
                   onClick={() => setIsForgotMode(true)}
-                  className="text-neutral-400 hover:text-white underline"
+                  className="text-zinc-400 hover:text-white underline"
                 >
-                  Forgot Key? Reset via WhatsApp OTP
+                  Reset via WhatsApp OTP
                 </button>
-                <Link href="/" className="text-neutral-400 hover:text-white">
+                <Link href="/" className="text-zinc-400 hover:text-white">
                   ← Back to Storefront
                 </Link>
               </div>
             </form>
           ) : (
-            /* PHONE NUMBER OTP RESET FORM */
-            <div className="space-y-4">
-              <div className="p-3.5 bg-neutral-800/80 rounded-2xl border border-neutral-700 text-xs text-neutral-300">
-                <span className="font-bold text-white block mb-1">📱 WhatsApp Security Verification:</span>
-                Registered store owner WhatsApp: <b>{OWNER_PHONE}</b>.
+            <div className="space-y-4 text-xs">
+              <div className="p-3.5 bg-zinc-900 rounded-2xl border border-zinc-800 text-zinc-300">
+                <p className="font-semibold text-white mb-1">Owner OTP Verification</p>
+                <p className="text-[11px] text-zinc-400">
+                  Verification code will be dispatched to registered phone: <strong className="text-white font-mono">{OWNER_PHONE}</strong>
+                </p>
               </div>
 
               {!otpSent ? (
                 <div className="space-y-3">
-                  <div>
-                    <label className="text-xs font-bold text-neutral-300 block mb-1">
-                      Confirm Registered Owner Phone:
-                    </label>
-                    <input
-                      type="text"
-                      value={recoveryPhone}
-                      onChange={(e) => setRecoveryPhone(e.target.value)}
-                      className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none font-mono"
-                    />
-                  </div>
-
-                  <button
-                    onClick={async () => {
-                      await handleRequestOtp();
-                    }}
-                    disabled={isRequestingOtp}
-                    className="w-full bg-[#25D366] hover:bg-[#1EBE5A] text-white font-black py-2.5 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-md"
-                  >
-                    <span>📲</span>
-                    <span>{isRequestingOtp ? 'Generating Security Code...' : 'Generate WhatsApp OTP (+91 63506 26582)'}</span>
-                  </button>
-
+                  <input
+                    type="tel"
+                    value={recoveryPhone}
+                    onChange={(e) => setRecoveryPhone(e.target.value)}
+                    placeholder="Enter owner phone"
+                    className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-white font-mono"
+                  />
                   <button
                     type="button"
-                    onClick={() => setIsForgotMode(false)}
-                    className="w-full text-center text-xs text-neutral-400 hover:text-white py-1"
+                    onClick={handleRequestOtp}
+                    disabled={isRequestingOtp}
+                    className="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-xl transition-all"
                   >
-                    Cancel & Return to Login
+                    {isRequestingOtp ? 'Dispatching OTP...' : 'Send OTP to Phone →'}
                   </button>
                 </div>
               ) : (
                 <form onSubmit={handleVerifyOtpAndReset} className="space-y-3">
-                  {/* High visibility OTP verification display */}
-                  <div className="p-4 bg-emerald-950/80 border border-emerald-600/80 text-emerald-200 rounded-2xl space-y-3 shadow-inner">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-white text-xs">🔐 Verification Code Generated:</span>
-                      <span className="text-[10px] bg-emerald-900 border border-emerald-700 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-bold">Valid 15 Mins</span>
-                    </div>
-
-                    <div className="bg-neutral-950 border border-emerald-700/60 rounded-xl p-3 text-center">
-                      <div className="font-mono text-3xl font-black tracking-widest text-emerald-400 select-all">
-                        {demoOtpCode || '635062'}
-                      </div>
-                      <div className="text-[10px] text-neutral-400 mt-1">
-                        Assigned to WhatsApp: <b>{OWNER_PHONE}</b>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEnteredOtp(demoOtpCode || '635062');
-                        }}
-                        className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-1.5 px-2 rounded-lg text-center shadow"
-                      >
-                        ⚡ Auto-Fill Code
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard?.writeText(demoOtpCode || '635062');
-                          alert("OTP Copied: " + (demoOtpCode || '635062'));
-                        }}
-                        className="bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-1.5 px-2 rounded-lg text-center border border-neutral-700"
-                      >
-                        📋 Copy Code
-                      </button>
-                    </div>
-
-                    {whatsappOtpLink && (
-                      <a
-                        href={whatsappOtpLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="w-full bg-[#25D366] hover:bg-[#1EBE5A] text-white font-black py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow"
-                      >
-                        <span>📲</span>
-                        <span>Open & Send on WhatsApp (+91 63506 26582)</span>
-                      </a>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-neutral-300 block mb-1">
-                      Enter 6-digit OTP (or use Master: 635062):
-                    </label>
-                    <input
-                      type="text"
-                      value={enteredOtp}
-                      onChange={(e) => setEnteredOtp(e.target.value)}
-                      placeholder="e.g. 635062"
-                      maxLength={8}
-                      className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2 text-sm text-white font-mono"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-neutral-300 block mb-1">
-                      Set New Admin PIN / Password:
-                    </label>
-                    <input
-                      type="password"
-                      value={newPin}
-                      onChange={(e) => setNewPin(e.target.value)}
-                      placeholder="Enter new 4-8 digit PIN"
-                      className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2 text-sm text-white"
-                      required
-                    />
-                  </div>
-
+                  <input
+                    type="text"
+                    required
+                    value={enteredOtp}
+                    onChange={(e) => setEnteredOtp(e.target.value)}
+                    placeholder="Enter 6-Digit OTP"
+                    className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-white font-mono text-center tracking-widest text-lg"
+                  />
+                  <input
+                    type="password"
+                    required
+                    value={newPin}
+                    onChange={(e) => setNewPin(e.target.value)}
+                    placeholder="Set New Master PIN (e.g. 970771)"
+                    className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-white font-mono"
+                  />
                   <button
                     type="submit"
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-black py-2.5 rounded-xl text-xs shadow-lg"
+                    className="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-xl transition-all"
                   >
-                    Confirm & Update PIN
+                    Verify & Reset PIN
                   </button>
                 </form>
               )}
 
-              <button
-                type="button"
-                onClick={() => { setIsForgotMode(false); setOtpSent(false); }}
-                className="w-full text-center text-xs text-neutral-400 hover:text-white pt-2"
-              >
-                ← Return to Password Login
-              </button>
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsForgotMode(false)}
+                  className="text-zinc-500 hover:text-zinc-300 underline"
+                >
+                  ← Return to Login
+                </button>
+              </div>
             </div>
           )}
-
         </div>
       </div>
     );
   }
 
-  // ==========================================
-  // RENDER: MAIN ADMIN DASHBOARD
-  // ==========================================
+  // ----------------------------------------------------
+  // RENDER: AUTHENTICATED MEDUSA ADMIN DASHBOARD
+  // ----------------------------------------------------
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans">
-      
-      {/* Admin Top Navbar */}
-      <header className="bg-neutral-900 border-b border-neutral-800 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-xl font-black uppercase tracking-tight text-white">
-              Kamakhya <span className="text-emerald-400">Admin</span>
-            </span>
-            <span className="bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-              Live No-Code Studio
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <a
-              href="/"
-              target="_blank"
-              className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold px-3 py-2 rounded-xl transition-colors border border-neutral-700 flex items-center gap-1.5"
-            >
-              <span>🌐</span>
-              <span className="hidden sm:inline">View Storefront</span>
-            </a>
-
-            <button
-              onClick={handleRestoreCatalog}
-              className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-bold px-3 py-2 rounded-xl transition-colors border border-neutral-700 flex items-center gap-1.5"
-              title="Restore any deleted factory catalog items back to active list"
-            >
-              <span>🔄</span>
-              <span className="hidden md:inline">Restore Factory Items</span>
-            </button>
-
-            <button
-              onClick={openCreateModal}
-              className="bg-emerald-500 hover:bg-emerald-600 text-black text-xs font-black px-4 py-2 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-1"
-            >
-              <span>+</span>
-              <span>Add New Product</span>
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="text-xs text-neutral-400 hover:text-red-400 px-2 py-1"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="min-h-screen bg-[#070a10] text-zinc-100 flex flex-col antialiased">
+      <div className="flex flex-1">
         
-        {/* Quick Metrics Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl">
-            <span className="text-neutral-400 text-xs">Total Products</span>
-            <div className="text-2xl font-black text-white mt-1">{products.length}</div>
-          </div>
-          <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl">
-            <span className="text-neutral-400 text-xs">Active Categories</span>
-            <div className="text-2xl font-black text-white mt-1">{CATEGORIES.length}</div>
-          </div>
-          <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl">
-            <span className="text-neutral-400 text-xs">Default Wholesale MOQ</span>
-            <div className="text-2xl font-black text-emerald-400 mt-1">30 pcs</div>
-          </div>
-          <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl">
-            <span className="text-neutral-400 text-xs">WhatsApp Dispatch</span>
-            <div className="text-sm font-bold text-white mt-2 truncate">{OWNER_PHONE}</div>
-          </div>
-        </div>
+        {/* 1. Medusa Sidebar */}
+        <AdminSidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+          productCount={products.length}
+          orderCount={orders.length}
+          onLogout={handleLogout}
+        />
 
-        {/* Filter & Search Bar */}
-        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-neutral-900 border border-neutral-800 p-3 rounded-2xl">
-          <div className="w-full sm:w-72">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by title or SKU..."
-              className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none"
-            />
-          </div>
+        {/* 2. Main Content Canvas */}
+        <div className="flex-1 flex flex-col min-w-0">
+          
+          {/* Header */}
+          <AdminHeader
+            activeTab={activeTab}
+            onOpenCreateProduct={openCreateModal}
+            onOpenCreateDraftOrder={() => {
+              setActiveTab('orders');
+            }}
+            onRestoreCatalog={handleRestoreCatalog}
+            onSyncModules={fetchProducts}
+            isRefreshing={isLoadingProducts}
+          />
 
-          <div className="flex gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-hide text-xs">
-            {['All', ...CATEGORIES].map(cat => (
-              <button
-                key={cat}
-                onClick={() => setCategoryFilter(cat)}
-                className={`px-3 py-1.5 rounded-xl whitespace-nowrap font-bold transition-colors ${
-                  categoryFilter === cat
-                    ? 'bg-white text-black'
-                    : 'bg-neutral-800 text-neutral-400 hover:text-white'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
+          {/* Body Content by Tab */}
+          <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+            
+            {activeTab === 'products' && (
+              <ProductsView
+                products={products}
+                isLoading={isLoadingProducts}
+                onEditProduct={openEditModal}
+                onDeleteProduct={handleDeleteProduct}
+                onOpenCreateProduct={openCreateModal}
+              />
+            )}
 
-        {/* Products Table / Grid */}
-        {isLoadingProducts ? (
-          <div className="text-center py-20 text-neutral-500">
-            <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-            Loading catalog products...
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-20 bg-neutral-900 rounded-3xl border border-neutral-800 text-neutral-500">
-            <span className="text-3xl block mb-2">👗</span>
-            No products found matching your search.
-          </div>
-        ) : (
-          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-neutral-950 text-neutral-400 uppercase tracking-wider text-[10px] border-b border-neutral-800">
-                  <tr>
-                    <th className="py-3 px-4">Garment</th>
-                    <th className="py-3 px-4">SKU / Fabric</th>
-                    <th className="py-3 px-4">Wholesale Rate</th>
-                    <th className="py-3 px-4">Retail MRP</th>
-                    <th className="py-3 px-4">MOQ</th>
-                    <th className="py-3 px-4">Variants</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-800">
-                  {filteredProducts.map((product) => (
-                    <tr key={product.id} className="hover:bg-neutral-800/50 transition-colors">
-                      <td className="py-3 px-4 flex items-center gap-3">
-                        <img
-                          src={product.image || 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=200'}
-                          alt={product.title}
-                          className="w-12 h-14 object-cover rounded-lg bg-neutral-800 flex-shrink-0"
-                        />
-                        <div>
-                          <div className="font-bold text-white text-xs">{product.title}</div>
-                          <span className="text-[10px] text-neutral-400 bg-neutral-800 px-1.5 py-0.5 rounded">
-                            {product.category}
-                          </span>
-                        </div>
-                      </td>
+            {activeTab === 'orders' && (
+              <OrdersView
+                orders={orders}
+                onCreateDraftOrder={handleCreateDraftOrder}
+                onUpdateOrderStatus={handleUpdateOrderStatus}
+                products={products}
+              />
+            )}
 
-                      <td className="py-3 px-4 font-mono text-neutral-300">
-                        <div>{product.sku}</div>
-                        <span className="text-[10px] text-neutral-500 font-sans">{product.fabric || 'Standard'}</span>
-                      </td>
+            {activeTab === 'inventory' && (
+              <InventoryView
+                products={products}
+                onAdjustStock={handleAdjustStock}
+              />
+            )}
 
-                      <td className="py-3 px-4">
-                        <span className="text-emerald-400 font-black text-sm">₹{product.wholesale_price}</span>
-                        <span className="text-[10px] text-neutral-500"> /pc</span>
-                      </td>
+            {activeTab === 'price_lists' && (
+              <PricingView />
+            )}
 
-                      <td className="py-3 px-4 text-neutral-400">
-                        ₹{product.retail_price}
-                      </td>
+            {activeTab === 'customers' && (
+              <CustomersView />
+            )}
 
-                      <td className="py-3 px-4 font-bold text-white">
-                        {product.moq} pcs
-                      </td>
+            {activeTab === 'promotions' && (
+              <PromotionsView />
+            )}
 
-                      <td className="py-3 px-4">
-                        <div className="flex gap-1">
-                          {(product.color_variants || []).map((c, i) => (
-                            <div
-                              key={i}
-                              className="w-4 h-4 rounded-full border border-neutral-600"
-                              style={{ backgroundColor: c.hex_code }}
-                              title={c.color_name}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-[10px] text-neutral-500">
-                          {(product.sizes || []).join(', ')}
-                        </span>
-                      </td>
+            {activeTab === 'workflows' && (
+              <WorkflowsView />
+            )}
 
-                      <td className="py-3 px-4 text-right space-x-2">
-                        <button
-                          onClick={() => openEditModal(product)}
-                          className="bg-neutral-800 hover:bg-neutral-700 text-white font-bold px-2.5 py-1.5 rounded-lg border border-neutral-700"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProduct(product.id, product.title)}
-                          className="bg-red-950/80 hover:bg-red-900 text-red-300 font-bold px-2.5 py-1.5 rounded-lg border border-red-800"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+            {activeTab === 'gateway' && (
+              <GatewayView />
+            )}
 
-      </main>
-
-      {/* CREATE / EDIT PRODUCT MODAL */}
-      {isFormOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/75 backdrop-blur-xs" onClick={() => setIsFormOpen(false)} />
-
-          <div className="relative bg-neutral-900 border border-neutral-800 text-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl z-10 my-8">
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-neutral-800">
-              <h3 className="text-lg font-black uppercase tracking-tight">
-                {editingProduct ? `Edit Product: ${editingProduct.title}` : 'Add New Apparel to Wholesale Catalog'}
-              </h3>
-              <button onClick={() => setIsFormOpen(false)} className="text-neutral-400 hover:text-white text-lg">✕</button>
-            </div>
-
-            <form onSubmit={handleSaveProduct} className="space-y-5 text-xs">
-              
-              {/* Row 1: Title & SKU */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {activeTab === 'settings' && (
+              <div className="bg-[#0b0f17] border border-zinc-800/80 rounded-xl p-6 space-y-6 max-w-2xl">
                 <div>
-                  <label className="font-bold text-neutral-300 block mb-1">Product Title *</label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="e.g. Pure Georgette Anarkali Set"
-                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
-                    required
-                  />
+                  <h3 className="text-base font-bold text-white">Admin Security & Master Password</h3>
+                  <p className="text-xs text-zinc-400 mt-1">Configure access keys and offline backup settings</p>
                 </div>
 
-                <div>
-                  <label className="font-bold text-neutral-300 block mb-1">SKU Code *</label>
-                  <input
-                    type="text"
-                    value={formData.sku}
-                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                    placeholder="e.g. KTC-ET-045"
-                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono"
-                    required
-                  />
-                </div>
-              </div>
+                <div className="space-y-4 text-xs font-mono">
+                  <div className="p-4 bg-zinc-900/60 rounded-xl border border-zinc-800 space-y-2">
+                    <div className="text-zinc-400">Current Store Master Password:</div>
+                    <div className="text-lg font-bold text-amber-300">970771</div>
+                    <div className="text-[11px] text-zinc-500 font-sans">
+                      Accepted across all decoupled microservices, universal adapter routes, and admin session login.
+                    </div>
+                  </div>
 
-              {/* Row 2: Category & Fabric */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="font-bold text-neutral-300 block mb-1">Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
-                  >
-                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
+                  <div className="p-4 bg-zinc-900/60 rounded-xl border border-zinc-800 space-y-2">
+                    <div className="text-zinc-400">Registered Recovery Phone:</div>
+                    <div className="text-white font-bold">{OWNER_PHONE}</div>
+                    <div className="text-[11px] text-zinc-500 font-sans">
+                      SMS and WhatsApp OTP tokens are verified against this phone number.
+                    </div>
+                  </div>
 
-                <div>
-                  <label className="font-bold text-neutral-300 block mb-1">Fabric / Material</label>
-                  <select
-                    value={formData.fabric}
-                    onChange={(e) => setFormData({ ...formData, fabric: e.target.value })}
-                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
-                  >
-                    {FABRIC_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 3: Pricing & MOQ */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
-                <div>
-                  <label className="font-bold text-emerald-400 block mb-1">Wholesale Rate (Bulk ₹) *</label>
-                  <input
-                    type="number"
-                    value={formData.wholesale_price}
-                    onChange={(e) => setFormData({ ...formData, wholesale_price: Number(e.target.value) })}
-                    className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white font-black"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-neutral-400 block mb-1">Retail MRP (Single ₹) *</label>
-                  <input
-                    type="number"
-                    value={formData.retail_price}
-                    onChange={(e) => setFormData({ ...formData, retail_price: Number(e.target.value) })}
-                    className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-neutral-300 block mb-1">MOQ (Bulk Order Pcs) *</label>
-                  <input
-                    type="number"
-                    value={formData.moq}
-                    onChange={(e) => setFormData({ ...formData, moq: Number(e.target.value) })}
-                    className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Sizes Available */}
-              <div>
-                <label className="font-bold text-neutral-300 block mb-1.5">Sizes in Wholesale Set</label>
-                <div className="flex flex-wrap gap-2">
-                  {SIZES_OPTIONS.map(s => (
+                  <div className="pt-2">
                     <button
-                      type="button"
-                      key={s}
-                      onClick={() => toggleSize(s)}
-                      className={`px-3 py-1.5 rounded-lg font-bold border transition-colors ${
-                        formData.sizes.includes(s)
-                          ? 'bg-white text-black border-white'
-                          : 'bg-neutral-950 text-neutral-400 border-neutral-700 hover:border-neutral-500'
-                      }`}
+                      onClick={handleRestoreCatalog}
+                      className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-amber-300 border border-zinc-700 rounded-lg text-xs font-sans transition-colors"
                     >
-                      {s}
+                      ↺ Restore Factory Catalog Items
                     </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Images: Catalog Flat Shoot & AI Model Preview */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="font-bold text-neutral-300 block mb-1">Catalog Flat Image URL *</label>
-                  <input
-                    type="text"
-                    value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    placeholder="https://... or upload below"
-                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white mb-2"
-                    required
-                  />
-                  <div className="flex items-center gap-2">
-                    <label className="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-3 py-1.5 rounded-lg cursor-pointer text-[11px] font-bold">
-                      {isUploading ? 'Uploading...' : '📁 Upload Local Image'}
-                      <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-                    </label>
                   </div>
                 </div>
-
-                <div>
-                  <label className="font-bold text-purple-400 block mb-1">✨ AI Model Try-On Image URL</label>
-                  <input
-                    type="text"
-                    value={formData.ai_model_image}
-                    onChange={(e) => setFormData({ ...formData, ai_model_image: e.target.value })}
-                    placeholder="AI model on-body photo"
-                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white mb-2"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleGenerateAiModel}
-                    disabled={isGeneratingAi}
-                    className="bg-purple-900/60 hover:bg-purple-800 border border-purple-700 text-purple-300 px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5"
-                  >
-                    <span>✨</span>
-                    <span>{isGeneratingAi ? 'Generating AI Preview...' : 'Generate AI Model View'}</span>
-                  </button>
-                </div>
               </div>
-
-              {/* Color Variants Builder */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="font-bold text-neutral-300">Color Variants</label>
-                  <button
-                    type="button"
-                    onClick={addColorVariant}
-                    className="text-emerald-400 hover:underline font-bold text-[11px]"
-                  >
-                    + Add Color
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  {formData.color_variants.map((c, idx) => (
-                    <div key={idx} className="flex items-center gap-2 bg-neutral-950 p-2 rounded-xl border border-neutral-800">
-                      <input
-                        type="color"
-                        value={c.hex_code}
-                        onChange={(e) => updateColorVariant(idx, 'hex_code', e.target.value)}
-                        className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
-                      />
-                      <input
-                        type="text"
-                        value={c.color_name}
-                        onChange={(e) => updateColorVariant(idx, 'color_name', e.target.value)}
-                        placeholder="Color name"
-                        className="flex-1 bg-neutral-900 border border-neutral-700 rounded-lg px-2.5 py-1 text-white text-xs"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeColorVariant(idx)}
-                        className="text-neutral-500 hover:text-red-400 px-2"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="font-bold text-neutral-300 block mb-1">Boutique Description & Specifications</label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Detail embroidery, weave, occasion, wash care..."
-                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
-                />
-              </div>
-
-              {/* Save CTAs */}
-              <div className="pt-4 border-t border-neutral-800 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsFormOpen(false)}
-                  className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-black font-black rounded-xl shadow-lg active:scale-95 disabled:opacity-50"
-                >
-                  {isSaving ? 'Saving to Catalog...' : 'Save Product to Live Catalog'}
-                </button>
-              </div>
-
-            </form>
-          </div>
+            )}
+          </main>
         </div>
-      )}
+      </div>
 
+      {/* 3. Medusa Slide-Over Side Drawer (`FocusModal` / `Drawer`) */}
+      <ProductDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        editingProduct={editingProduct}
+        formData={formData}
+        setFormData={setFormData}
+        onSave={handleSaveProduct}
+        isSaving={isSaving}
+        isUploading={isUploading}
+        onFileUpload={handleFileUpload}
+        isGeneratingAi={isGeneratingAi}
+        onGenerateAiModel={handleGenerateAiModel}
+        categories={CATEGORIES}
+        fabrics={FABRIC_OPTIONS}
+        sizesOptions={SIZES_OPTIONS}
+      />
+
+      {/* 4. Global Command Palette (`⌘K`) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        products={products}
+        onSelectProduct={(p) => openEditModal(p)}
+        onNavigateTab={(tab) => setActiveTab(tab)}
+        onOpenCreateProduct={openCreateModal}
+        onOpenCreateDraftOrder={() => setActiveTab('orders')}
+      />
     </div>
   );
 }
