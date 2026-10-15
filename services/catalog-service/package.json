@@ -1,0 +1,11 @@
+{
+  "name": "ktc-catalog-service",
+  "version": "1.0.0",
+  "description": "High-throughput catalog and inventory microservice for Kamakhya Trading Co",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["catalog", "inventory", "microservice", "b2b"]
+}

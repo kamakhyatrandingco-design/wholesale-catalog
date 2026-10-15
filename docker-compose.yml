@@ -1,0 +1,144 @@
+version: '3.8'
+
+services:
+  # 1. Presentation Layer (Headless Next.js 16 Storefront)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: ktc-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - API_GATEWAY_URL=http://api-gateway:5000
+      - NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:5000
+    depends_on:
+      - api-gateway
+    networks:
+      - ktc-network
+
+  # 2. Headless API Gateway & Orchestrator
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: ktc-api-gateway
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - CATALOG_HOST=catalog-service
+      - CATALOG_PORT=5001
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=5002
+      - ORDER_HOST=order-service
+      - ORDER_PORT=5003
+      - AI_HOST=ai-service
+      - AI_PORT=5004
+    depends_on:
+      - catalog-service
+      - auth-service
+      - order-service
+      - ai-service
+    networks:
+      - ktc-network
+
+  # 3. Catalog & Inventory Microservice (Node.js)
+  catalog-service:
+    build:
+      context: ./services/catalog-service
+      dockerfile: Dockerfile
+    container_name: ktc-catalog-service
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    volumes:
+      - ./content/products:/app/content/products:ro
+    networks:
+      - ktc-network
+
+  # 4. Auth & Boutique Profile Microservice (Node.js)
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: ktc-auth-service
+    ports:
+      - "5002:5002"
+    environment:
+      - PORT=5002
+      - ADMIN_SECRET=ktc-admin-key-63506265
+      - DATABASE_URL=postgresql://ktc_user:ktc_password@postgres:5432/ktc_auth
+    depends_on:
+      - postgres
+    networks:
+      - ktc-network
+
+  # 5. Cart, Quotation & Order Microservice (Node.js)
+  order-service:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+    container_name: ktc-order-service
+    ports:
+      - "5003:5003"
+    environment:
+      - PORT=5003
+      - DATABASE_URL=postgresql://ktc_user:ktc_password@postgres:5432/ktc_orders
+    depends_on:
+      - postgres
+    networks:
+      - ktc-network
+
+  # 6. AI & Recommendation Engine Microservice (Python)
+  ai-service:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile
+    container_name: ktc-ai-service
+    ports:
+      - "5004:5004"
+    environment:
+      - AI_PORT=5004
+      - PYTHONUNBUFFERED=1
+    networks:
+      - ktc-network
+
+  # 7. High-Speed Caching Layer (Redis)
+  redis:
+    image: redis:7-alpine
+    container_name: ktc-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - ktc-network
+
+  # 8. Relational Data Layer (PostgreSQL - Strict ACID Consistency)
+  postgres:
+    image: postgres:15-alpine
+    container_name: ktc-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=ktc_user
+      - POSTGRES_PASSWORD=ktc_password
+      - POSTGRES_DB=ktc_orders
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - ktc-network
+
+networks:
+  ktc-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  postgres-data:
