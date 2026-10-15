@@ -15,6 +15,7 @@ import BoutiqueRoiCalculator from './components/BoutiqueRoiCalculator';
 import AiChatbot from './components/AiChatbot';
 import UserAuthModal from './components/UserAuthModal';
 import NewUserGuide from './components/NewUserGuide';
+import AboutModal from './components/AboutModal';
 
 const WHATSAPP_NUMBER = "916350626582";
 
@@ -64,6 +65,7 @@ export default function Storefront({ products = [] }) {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [restockProduct, setRestockProduct] = useState(null);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
 
   // 3. Web Speech API Voice Search
   const [isVoiceListening, setIsVoiceListening] = useState(false);

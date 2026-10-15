@@ -10,6 +10,7 @@ export default function LuxuryNavbar({
   onOpenCart,
   onOpenCalculator,
   onOpenAuth,
+  onOpenAbout,
   onResetFilters
 }) {
   return (
