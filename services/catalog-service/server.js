@@ -232,6 +232,19 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // 5. DELETE /catalog/products/:id or /products/:id
+    const deleteMatch = pathname.match(/^\/(?:catalog\/)?products\/([a-zA-Z0-9_-]+)$/);
+    if (deleteMatch && method === 'DELETE') {
+      const id = deleteMatch[1];
+      catalogCache.delete(id);
+      inventoryLedger.delete(id);
+      return sendJson(200, {
+        success: true,
+        id,
+        message: `Product '${id}' removed from catalog service`
+      });
+    }
+
     // 5. GET /catalog/categories
     if ((pathname === '/categories' || pathname === '/catalog/categories') && method === 'GET') {
       const products = loadCatalog();

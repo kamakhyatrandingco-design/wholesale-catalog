@@ -5,8 +5,22 @@ import { NextResponse } from 'next/server';
 import { listFiles, getFile } from '@/app/lib/github';
 
 const PRODUCTS_DIR = 'content/products';
+const DELETED_REGISTRY_FILE = path.join(process.cwd(), 'content/deleted-products.json');
+
+function getDeletedIds() {
+  try {
+    if (fs.existsSync(DELETED_REGISTRY_FILE)) {
+      const raw = fs.readFileSync(DELETED_REGISTRY_FILE, 'utf8');
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return new Set(arr);
+    }
+  } catch {}
+  return new Set();
+}
 
 export async function GET() {
+  const deletedSet = getDeletedIds();
+
   // Option A: If GITHUB_TOKEN is configured, fetch live from GitHub
   if (process.env.GITHUB_TOKEN) {
     try {
@@ -28,7 +42,7 @@ export async function GET() {
         })
       );
 
-      const validProducts = products.filter(Boolean);
+      const validProducts = products.filter(Boolean).filter(p => !deletedSet.has(p.id) && !deletedSet.has(p.slug));
       if (validProducts.length > 0) {
         return NextResponse.json(validProducts);
       }
@@ -54,7 +68,8 @@ export async function GET() {
             ...data,
             body: content,
           };
-        });
+        })
+        .filter(p => !deletedSet.has(p.id) && !deletedSet.has(p.slug));
       return NextResponse.json(products);
     }
     return NextResponse.json([]);
