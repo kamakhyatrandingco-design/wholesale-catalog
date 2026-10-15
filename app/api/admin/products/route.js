@@ -4,6 +4,9 @@ import matter from 'gray-matter';
 import { NextResponse } from 'next/server';
 import { listFiles, getFile, putFile, deleteFile } from '@/app/lib/github';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 const PRODUCTS_DIR = 'content/products';
 const LOCAL_PRODUCTS_DIR = path.join(process.cwd(), 'content/products');
 const DELETED_REGISTRY_FILE = path.join(process.cwd(), 'content/deleted-products.json');

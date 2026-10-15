@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Default owner phone and master credentials
 const OWNER_PHONE = "916350626582";
 const PRE_PASSWORD = "970771"; // Master password specified by owner: 970771
