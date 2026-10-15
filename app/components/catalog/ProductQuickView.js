@@ -1,0 +1,231 @@
+'use client';
+
+import { useState } from 'react';
+
+const CATEGORY_MODEL_FALLBACKS = {
+  "Ethnic Wear": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=1000",
+  "Western Wear": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1000",
+  "Girls Partywear": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000",
+  "Bridal": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=1000",
+  "Loungewear": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1000",
+  "Default": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000"
+};
+
+export default function ProductQuickView({
+  product,
+  onClose,
+  purchaseMode = 'wholesale',
+  onAddToQuote,
+  onOpenAiStudio,
+  whatsappNumber = "916350626582"
+}) {
+  const [isAiView, setIsAiView] = useState(false);
+  const [selectedColorIdx, setSelectedColorIdx] = useState(0);
+  const [selectedSize, setSelectedSize] = useState(product?.sizes?.[0] || 'Free Size');
+
+  if (!product) return null;
+
+  const isWholesale = purchaseMode === 'wholesale';
+  const wholesalePrice = Number(product.wholesale_price || 0);
+  const retailPrice = Number(product.retail_price || product.wholesale_price || 0);
+  const displayPrice = isWholesale ? wholesalePrice : retailPrice;
+  const displayMoq = isWholesale ? (product.moq || 30) : 1;
+
+  const colors = product.color_variants || [];
+  const activeColor = colors[selectedColorIdx];
+
+  // Image Source
+  let imageSrc = product.image;
+  if (isAiView) {
+    if (activeColor?.ai_image) imageSrc = activeColor.ai_image;
+    else if (product.ai_model_image) imageSrc = product.ai_model_image;
+    else imageSrc = CATEGORY_MODEL_FALLBACKS[product.category] || CATEGORY_MODEL_FALLBACKS.Default;
+  } else {
+    if (activeColor?.image) imageSrc = activeColor.image;
+  }
+
+  const waMessage = `Namaste Kamakhya Trading Co! 🙏\n\nI want to order from your catalog:\n📦 *Product:* ${product.title}\n🏷️ *SKU:* ${product.sku}\n🎨 *Color:* ${activeColor ? activeColor.color_name : 'Default'}\n📏 *Size:* ${selectedSize}\n💰 *Price:* ₹${displayPrice}/pc\n🔢 *Order Quantity:* ${displayMoq} pcs\n\nPlease share dispatch timeline and bank payment details.`;
+  const waUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(waMessage)}`;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Modal Dialog Card */}
+      <div className="relative bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl z-10 overflow-hidden border border-neutral-200 animate-fade-in">
+        
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-neutral-400 hover:text-black font-bold text-lg p-2 rounded-full hover:bg-neutral-100 transition-colors cursor-pointer"
+          aria-label="Close Quick View"
+        >
+          ✕
+        </button>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 items-start">
+          
+          {/* Image & AI View Toggle */}
+          <div className="relative aspect-[4/5] bg-neutral-100 rounded-2xl overflow-hidden border border-neutral-200">
+            <img
+              src={imageSrc}
+              alt={product.title}
+              className="w-full h-full object-cover"
+            />
+            
+            <button
+              onClick={() => setIsAiView(!isAiView)}
+              className="absolute bottom-3 right-3 bg-neutral-950/85 hover:bg-neutral-950 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-xs flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <span>✨</span>
+              <span>{isAiView ? 'Show Flat Shoot' : 'Show AI Drape'}</span>
+            </button>
+          </div>
+
+          {/* Product Specifications & Order Actions */}
+          <div className="flex flex-col justify-between h-full space-y-5">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-purple-800 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-200">
+                  {product.category}
+                </span>
+                <span className="text-xs text-neutral-400 font-mono">
+                  {product.sku}
+                </span>
+              </div>
+
+              <h3 className="font-serif-display text-2xl font-black text-neutral-950 mt-2 mb-2 leading-tight">
+                {product.title}
+              </h3>
+
+              {/* Price Block */}
+              <div className="mb-4 pt-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-black text-neutral-950">
+                    ₹{displayPrice.toLocaleString('en-IN')}
+                  </span>
+                  <span className="text-xs text-neutral-500 font-semibold">/ piece</span>
+                </div>
+                {isWholesale && retailPrice > wholesalePrice && (
+                  <div className="text-xs text-emerald-700 font-semibold mt-0.5">
+                    Suggested Retail MRP: ₹{retailPrice.toLocaleString('en-IN')} (High boutique resale margin)
+                  </div>
+                )}
+              </div>
+
+              {/* Color Selection */}
+              {colors.length > 0 && (
+                <div className="mb-4">
+                  <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5 flex justify-between">
+                    <span>Select Color:</span>
+                    <span className="text-neutral-900 font-semibold">{activeColor?.color_name}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {colors.map((c, idx) => (
+                      <button
+                        key={c.color_name}
+                        onClick={() => setSelectedColorIdx(idx)}
+                        className={`w-6 h-6 rounded-full border transition-all cursor-pointer ${
+                          selectedColorIdx === idx
+                            ? 'border-neutral-950 scale-110 ring-2 ring-neutral-950/20'
+                            : 'border-neutral-300 hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: c.hex_code }}
+                        title={c.color_name}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Size Selection */}
+              {product.sizes?.length > 0 && (
+                <div className="mb-4">
+                  <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
+                    Select Size:
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {product.sizes.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setSelectedSize(s)}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
+                          selectedSize === s
+                            ? 'bg-neutral-950 text-white border-neutral-950'
+                            : 'bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400'
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Technical Mill Specs */}
+              <div className="space-y-2 text-xs text-neutral-600 bg-neutral-50 p-4 rounded-xl border border-neutral-200/80">
+                <div className="flex justify-between">
+                  <span className="font-semibold text-neutral-500">Fabric &amp; Loom:</span>
+                  <span className="font-bold text-neutral-900">{product.fabric || 'Pure Mill Cotton / Silk Weave'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold text-neutral-500">Wholesale Lot MOQ:</span>
+                  <span className="font-bold text-neutral-900">{product.moq || 30} pieces</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold text-neutral-500">Dispatch Speed:</span>
+                  <span className="font-bold text-neutral-900">Ready In-Stock (24-48 Hours)</span>
+                </div>
+                {product.description && (
+                  <p className="pt-2 border-t border-neutral-200 text-neutral-600 text-[11px] leading-relaxed">
+                    {product.description}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* CTAs */}
+            <div className="space-y-2.5 pt-2">
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full bg-[#25D366] hover:bg-[#1EBE5A] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md transition-all cursor-pointer"
+              >
+                <span>Order Directly on WhatsApp</span>
+              </a>
+
+              <button
+                onClick={() => {
+                  onAddToQuote({ ...product, selectedColor: activeColor?.color_name, selectedSize });
+                  onClose();
+                }}
+                className="w-full bg-neutral-950 hover:bg-neutral-800 text-white font-bold py-3 px-4 rounded-xl text-xs transition-colors shadow-sm cursor-pointer"
+              >
+                + Add Lot to Bulk Purchase Order
+              </button>
+
+              <button
+                onClick={() => {
+                  onOpenAiStudio(product);
+                  onClose();
+                }}
+                className="w-full bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold py-2.5 px-4 rounded-xl text-xs border border-purple-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>✨</span>
+                <span>Launch in AI Try-On Studio</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  );
+}
