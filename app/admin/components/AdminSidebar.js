@@ -226,7 +226,7 @@ export default function AdminSidebar({
             </div>
             <div>
               <div className="text-[11px] font-semibold text-zinc-200 leading-tight">Admin</div>
-              <div className="text-[9px] font-mono text-zinc-500">PIN: 970771</div>
+              <div className="text-[9px] font-mono text-emerald-400 font-medium">● Verified Store Owner</div>
             </div>
           </div>
 

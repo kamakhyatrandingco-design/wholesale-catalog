@@ -67,7 +67,7 @@ export async function POST(req) {
 
       return NextResponse.json({
         success: false,
-        error: "Incorrect Admin Password. You can use Admin Password 970771 or reset via WhatsApp OTP."
+        error: "Incorrect Admin Password. Please try again or reset via WhatsApp OTP."
       }, { status: 401 });
     }
 

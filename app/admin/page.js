@@ -46,7 +46,7 @@ export default function MedusaAdminPortal() {
   const [sessionAuth, setSessionAuth] = useState(false);
   const isAuthenticated = sessionAuth || savedAuthSnapshot === 'valid';
 
-  const [pin, setPin] = useState('970771');
+  const [pin, setPin] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -237,7 +237,7 @@ export default function MedusaAdminPortal() {
         fetchProducts();
         fetchOrders();
       } else {
-        setLoginError(data?.error || "Incorrect Admin Password. Default is 970771.");
+        setLoginError(data?.error || "Incorrect Admin Password. Please try again or use OTP recovery.");
       }
     } catch (err) {
       // Offline / serverless cold start fallback for master credentials
@@ -571,17 +571,6 @@ export default function MedusaAdminPortal() {
                 {isLoggingIn ? 'Authenticating...' : 'Enter Medusa Admin Dashboard →'}
               </button>
 
-              <div className="text-center pt-1">
-                <button
-                  type="button"
-                  onClick={() => setPin('970771')}
-                  className="text-[11px] text-amber-400/90 hover:text-amber-300 underline font-mono font-bold"
-                >
-                  ⚡ Fill Store Master Password (970771)
-                </button>
-              </div>
-
-
               <div className="pt-4 border-t border-zinc-800 flex justify-between items-center text-xs">
                 <button
                   type="button"
@@ -637,7 +626,7 @@ export default function MedusaAdminPortal() {
                     required
                     value={newPin}
                     onChange={(e) => setNewPin(e.target.value)}
-                    placeholder="Set New Master PIN (e.g. 970771)"
+                    placeholder="Set New Master PIN"
                     className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-white font-mono"
                   />
                   <button
@@ -756,10 +745,10 @@ export default function MedusaAdminPortal() {
 
                 <div className="space-y-4 text-xs font-mono">
                   <div className="p-4 bg-zinc-900/60 rounded-xl border border-zinc-800 space-y-2">
-                    <div className="text-zinc-400">Current Store Master Password:</div>
-                    <div className="text-lg font-bold text-amber-300">970771</div>
+                    <div className="text-zinc-400">Store Master Password:</div>
+                    <div className="text-lg font-bold text-amber-300 tracking-widest font-mono">••••••</div>
                     <div className="text-[11px] text-zinc-500 font-sans">
-                      Accepted across all decoupled microservices, universal adapter routes, and admin session login.
+                      Protected master key configured in environment. To reset, use WhatsApp OTP recovery.
                     </div>
                   </div>
 
