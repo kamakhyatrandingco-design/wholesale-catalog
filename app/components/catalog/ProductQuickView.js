@@ -2,24 +2,13 @@
 
 import { useState } from 'react';
 
-const CATEGORY_MODEL_FALLBACKS = {
-  "Ethnic Wear": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=1000",
-  "Western Wear": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1000",
-  "Girls Partywear": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000",
-  "Bridal": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=1000",
-  "Loungewear": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1000",
-  "Default": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000"
-};
-
 export default function ProductQuickView({
   product,
   onClose,
   purchaseMode = 'wholesale',
   onAddToQuote,
-  onOpenAiStudio,
   whatsappNumber = "916350626582"
 }) {
-  const [isAiView, setIsAiView] = useState(false);
   const [selectedColorIdx, setSelectedColorIdx] = useState(0);
   const [selectedSize, setSelectedSize] = useState(product?.sizes?.[0] || 'Free Size');
 
@@ -34,15 +23,8 @@ export default function ProductQuickView({
   const colors = product.color_variants || [];
   const activeColor = colors[selectedColorIdx];
 
-  // Image Source
-  let imageSrc = product.image;
-  if (isAiView) {
-    if (activeColor?.ai_image) imageSrc = activeColor.ai_image;
-    else if (product.ai_model_image) imageSrc = product.ai_model_image;
-    else imageSrc = CATEGORY_MODEL_FALLBACKS[product.category] || CATEGORY_MODEL_FALLBACKS.Default;
-  } else {
-    if (activeColor?.image) imageSrc = activeColor.image;
-  }
+  // Image Source (Real Garment Photography)
+  const imageSrc = activeColor?.image || product.image || "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800";
 
   const waMessage = `Namaste Kamakhya Trading Co! 🙏\n\nI want to order from your catalog:\n📦 *Product:* ${product.title}\n🏷️ *SKU:* ${product.sku}\n🎨 *Color:* ${activeColor ? activeColor.color_name : 'Default'}\n📏 *Size:* ${selectedSize}\n💰 *Price:* ₹${displayPrice}/pc\n🔢 *Order Quantity:* ${displayMoq} pcs\n\nPlease share dispatch timeline and bank payment details.`;
   const waUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(waMessage)}`;
@@ -76,14 +58,6 @@ export default function ProductQuickView({
               alt={product.title}
               className="w-full h-full object-cover"
             />
-            
-            <button
-              onClick={() => setIsAiView(!isAiView)}
-              className="absolute bottom-3 right-3 bg-neutral-950/85 hover:bg-neutral-950 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-xs flex items-center gap-1.5 transition-all cursor-pointer"
-            >
-              <span>✨</span>
-              <span>{isAiView ? 'Show Flat Shoot' : 'Show AI Drape'}</span>
-            </button>
           </div>
 
           {/* Product Specifications & Order Actions */}
@@ -207,17 +181,6 @@ export default function ProductQuickView({
                 className="w-full bg-neutral-950 hover:bg-neutral-800 text-white font-bold py-3 px-4 rounded-xl text-xs transition-colors shadow-sm cursor-pointer"
               >
                 + Add Lot to Bulk Purchase Order
-              </button>
-
-              <button
-                onClick={() => {
-                  onOpenAiStudio(product);
-                  onClose();
-                }}
-                className="w-full bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold py-2.5 px-4 rounded-xl text-xs border border-purple-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <span>✨</span>
-                <span>Launch in AI Try-On Studio</span>
               </button>
             </div>
 

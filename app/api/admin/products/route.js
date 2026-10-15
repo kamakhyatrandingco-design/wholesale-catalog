@@ -217,7 +217,6 @@ async function handleSave(slug, product) {
     image:
       product.image ||
       'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800',
-    ai_model_image: product.ai_model_image || '',
     description: product.description || '',
     color_variants: Array.isArray(product.color_variants)
       ? product.color_variants

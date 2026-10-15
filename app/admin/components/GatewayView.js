@@ -36,9 +36,9 @@ export default function GatewayView() {
       path: '/api/v1/orders/*'
     },
     {
-      name: 'AI & Try-On Studio Service',
+      name: 'AI Wholesale Stylist & NLP Search Service',
       port: 5004,
-      role: 'Neural Try-On simulations, natural language search parsing, recommendations',
+      role: 'Bilingual conversational bot, natural language search parsing, boutique recommendations',
       status: 'Ready / In-Process Fallback',
       path: '/api/v1/ai/*'
     }

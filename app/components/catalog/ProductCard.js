@@ -1,14 +1,5 @@
 'use client';
 
-const CATEGORY_MODEL_FALLBACKS = {
-  "Ethnic Wear": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=1000",
-  "Western Wear": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1000",
-  "Girls Partywear": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000",
-  "Bridal": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=1000",
-  "Loungewear": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1000",
-  "Default": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000"
-};
-
 export default function ProductCard({
   product,
   purchaseMode = 'wholesale',
@@ -16,11 +7,8 @@ export default function ProductCard({
   onSelectColor,
   selectedSize,
   onSelectSize,
-  isAiView = false,
-  onToggleAiView,
   onQuickView,
   onAddToQuote,
-  onOpenAiStudio,
   onRestockRequest,
   whatsappNumber = "916350626582"
 }) {
@@ -39,16 +27,9 @@ export default function ProductCard({
   const sizes = product.sizes || [];
   const activeSize = selectedSize || sizes[0] || 'Free Size';
 
-  // Compute Image Source
+  // Compute Image Source (Real Garment Photography)
   const variant = colors[selectedColorIndex];
-  let currentImageSrc = product.image || "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800";
-  if (isAiView) {
-    if (variant?.ai_image) currentImageSrc = variant.ai_image;
-    else if (product.ai_model_image) currentImageSrc = product.ai_model_image;
-    else currentImageSrc = CATEGORY_MODEL_FALLBACKS[product.category] || CATEGORY_MODEL_FALLBACKS.Default;
-  } else {
-    if (variant?.image) currentImageSrc = variant.image;
-  }
+  const currentImageSrc = variant?.image || product.image || "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800";
 
   // WhatsApp 1-tap direct inquiry message
   const productMessage = `Namaste Kamakhya Trading Co! 🙏\n\nI want to place an order from your catalog:\n\n📦 *Product:* ${product.title} (${isWholesale ? 'Wholesale Lot' : 'Retail Sample Piece'})\n🏷️ *SKU:* ${product.sku}\n🎨 *Color:* ${activeColor ? activeColor.color_name : 'Default'}\n📏 *Size:* ${activeSize}\n💰 *Price:* ₹${displayPrice}/pc\n🔢 *Order Quantity:* ${displayMoq} pcs\n\nPlease confirm ready stock availability and dispatch timeline.`;
@@ -73,19 +54,6 @@ export default function ProductCard({
             </span>
           )}
         </div>
-
-        {/* AI Model View Toggle Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleAiView(product.id);
-          }}
-          className="absolute top-3 right-3 z-20 bg-white/90 hover:bg-white text-neutral-900 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 backdrop-blur-xs transition-transform active:scale-95 shadow-md border border-neutral-200 cursor-pointer"
-          title="Toggle AI Model Look"
-        >
-          <span className="text-purple-600">✨</span>
-          <span>{isAiView ? 'Catalog Shoot' : 'AI Model Look'}</span>
-        </button>
 
         {/* Product Image */}
         <img
@@ -200,18 +168,6 @@ export default function ProductCard({
 
         {/* Action CTAs: AI Try-On, WhatsApp Order, and Add to Bulk PO */}
         <div className="flex flex-col gap-2">
-          
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenAiStudio(product);
-            }}
-            className="w-full bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold py-2 px-3 rounded-xl transition-all duration-200 text-xs flex items-center justify-center gap-1.5 border border-purple-200/80 shadow-2xs cursor-pointer"
-          >
-            <span>✨</span>
-            <span>Try on AI Model Studio</span>
-          </button>
-
           <a
             href={productWaUrl}
             target="_blank"
