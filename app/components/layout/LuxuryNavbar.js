@@ -8,7 +8,6 @@ export default function LuxuryNavbar({
   quoteItemCount = 0,
   quoteTotalAmount = 0,
   onOpenCart,
-  onOpenAiStudio,
   onOpenCalculator,
   onOpenAuth,
   onResetFilters
@@ -45,11 +44,10 @@ export default function LuxuryNavbar({
               All Collections
             </button>
             <button
-              onClick={onOpenAiStudio}
-              className="hover:text-purple-700 transition-colors flex items-center gap-1 cursor-pointer text-purple-900 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200/70"
+              onClick={onOpenAbout}
+              className="hover:text-black transition-colors cursor-pointer"
             >
-              <span>✨</span>
-              <span>AI Try-On Studio</span>
+              About &amp; Cloud Hub
             </button>
             <button
               onClick={onOpenCalculator}

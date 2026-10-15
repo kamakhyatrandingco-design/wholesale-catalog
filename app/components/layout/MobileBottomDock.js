@@ -4,7 +4,6 @@ export default function MobileBottomDock({
   quoteItemCount = 0,
   quoteTotalAmount = 0,
   onOpenCart,
-  onOpenAiStudio,
   onOpenCalculator,
   whatsappNumber = "916350626582",
   onScrollToCatalog
@@ -25,15 +24,6 @@ export default function MobileBottomDock({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
           <span>Catalog</span>
-        </button>
-
-        {/* AI Studio */}
-        <button
-          onClick={onOpenAiStudio}
-          className="flex flex-col items-center justify-center p-1.5 rounded-lg text-purple-700 hover:text-purple-900 transition-colors flex-1"
-        >
-          <span className="text-base mb-0.5">✨</span>
-          <span>AI Studio</span>
         </button>
 
         {/* Margin Calc */}

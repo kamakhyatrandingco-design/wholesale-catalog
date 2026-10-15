@@ -69,14 +69,8 @@ collections:
           options: ["XS", "S", "M", "L", "XL", "XXL", "Free Size"],
         }
       - {
-          label: "Product Image (Catalog Flat Shoot)",
+          label: "Product Image (Garment Photo)",
           name: "image",
-          widget: "image",
-          required: false,
-        }
-      - {
-          label: "AI Model Try-On Image (On-Model Shoot)",
-          name: "ai_model_image",
           widget: "image",
           required: false,
         }

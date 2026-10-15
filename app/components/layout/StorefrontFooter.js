@@ -7,7 +7,7 @@ export default function StorefrontFooter({
   onOpenGuide,
   onOpenAuth,
   onOpenCalculator,
-  onOpenAiStudio
+  onOpenAbout
 }) {
   return (
     <footer className="bg-[#0c0c0e] text-neutral-400 text-xs border-t border-neutral-800/90 pt-16 pb-24 md:pb-16 px-4 sm:px-6 lg:px-8">
@@ -96,14 +96,6 @@ export default function StorefrontFooter({
                   className="hover:text-emerald-400 transition-colors cursor-pointer"
                 >
                   📊 Boutique Resale ROI Calculator
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={onOpenAiStudio}
-                  className="hover:text-purple-400 transition-colors cursor-pointer"
-                >
-                  ✨ AI Virtual Try-On Studio
                 </button>
               </li>
               <li>
