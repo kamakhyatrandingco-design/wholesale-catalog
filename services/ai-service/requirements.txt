@@ -1,0 +1,4 @@
+# Built with standard Python library for zero-dependency portability
+# Optional extensions:
+# fastapi>=0.100.0
+# uvicorn>=0.23.0
