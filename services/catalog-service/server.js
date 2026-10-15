@@ -245,8 +245,8 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-
     // 5. GET /catalog/categories
+
     if ((pathname === '/categories' || pathname === '/catalog/categories') && method === 'GET') {
       const products = loadCatalog();
       const breakdown = {};

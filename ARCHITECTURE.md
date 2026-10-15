@@ -135,3 +135,48 @@ Example response:
   ]
 }
 ```
+
+---
+
+## 5. Medusa 2.0 Modular Commerce & Workflows Architecture
+
+Following the design standards of [MedusaJS](https://github.com/medusajs/medusa), the platform incorporates a headless, modular commerce foundation located in `lib/medusa/` and exposed via `/api/medusa/*`:
+
+```mermaid
+flowchart TD
+    subgraph UI ["Medusa UI Admin Portal"]
+        SIDEBAR["Grouped Sidebar Navigation"]
+        HEADER["Global Command Palette (⌘K)"]
+        DRAWER["Slide-Over FocusModal Drawer"]
+        TABLES["High-Density Data Tables"]
+    end
+
+    subgraph Modules ["Medusa Domain Modules (lib/medusa/modules)"]
+        MOD_PROD["Product Module<br/>• SKUs, Handles, Options & Color Variants"]
+        MOD_INV["Inventory Module<br/>• Multi-Warehouse (Surat, Jaipur, Guwahati)<br/>• Available-to-Promise (ATP) & Reservations"]
+        MOD_PRICE["Pricing Module<br/>• B2B Price Lists (Standard, Gold, Diamond)<br/>• Indian Apparel GST Slabs (5% / 12%)"]
+        MOD_ORD["Order Module<br/>• Draft Wholesale POs & Status Lifecycles<br/>• Proforma Invoice Projections"]
+        MOD_CUST["Customer Module<br/>• B2B Buyer Groups & GSTIN Directory"]
+        MOD_PROMO["Promotion Module<br/>• Volume Campaigns (FESTIVE10, FREESHIP)"]
+    end
+
+    subgraph Workflows ["Medusa Workflows (Saga Engine)"]
+        WF1["createProductWorkflow"]
+        WF2["updateInventoryWorkflow"]
+        WF3["createDraftOrderWorkflow"]
+        WF4["calculateB2BPriceWorkflow"]
+    end
+
+    UI --> Modules
+    Modules --> Workflows
+```
+
+### Modules Breakdown:
+1. **Product Module (`lib/medusa/modules/product-module.js`)**: Handles structured apparel product modeling, SKU identifiers, category taxonomies, and multi-color variants.
+2. **Inventory Module (`lib/medusa/modules/inventory-module.js`)**: Tracks stock across 3 regional depots (Surat Central Mill, Jaipur Finishing Studio, Guwahati Regional Hub) with Available-to-Promise (ATP) calculations and reservation ledgers.
+3. **Pricing Module (`lib/medusa/modules/pricing-module.js`)**: Dynamic B2B price calculations based on buyer tiers (Standard, Gold 8% off, Diamond 15% off + Free Freight) and automatic Indian Apparel GST slab detection.
+4. **Order Module (`lib/medusa/modules/order-module.js`)**: Full wholesale purchase order lifecycle (`draft` → `pending_payment` → `processing` → `fulfilled` → `shipped`) with WhatsApp notifications.
+5. **Customer Module (`lib/medusa/modules/customer-module.js`)**: Manages verified boutique buyers, credit terms, and GSTIN compliance.
+6. **Promotion Module (`lib/medusa/modules/promotion-module.js`)**: Automated condition-based discounts and freight subsidies.
+7. **Workflows Orchestrator (`lib/medusa/workflows/index.js`)**: Step-based composable execution graphs with automatic compensation/rollback logic and step execution telemetry.
+
