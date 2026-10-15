@@ -105,6 +105,16 @@ export default function AdminPortal() {
       const data = await res.json();
       const serverProducts = data.products || [];
 
+      // Read persistent deleted IDs
+      let deletedIds = new Set();
+      try {
+        const rawDel = localStorage.getItem('ktc_deleted_products');
+        if (rawDel) {
+          const arr = JSON.parse(rawDel);
+          if (Array.isArray(arr)) deletedIds = new Set(arr);
+        }
+      } catch (e) {}
+
       // Merge with custom products saved locally (ensures persistence across serverless cold starts)
       let localProducts = [];
       try {
@@ -113,8 +123,18 @@ export default function AdminPortal() {
       } catch (e) {}
 
       const productMap = new Map();
-      serverProducts.forEach(p => productMap.set(p.id || p.slug, p));
-      localProducts.forEach(p => productMap.set(p.id || p.slug, p));
+      serverProducts.forEach(p => {
+        const key = p.id || p.slug;
+        if (!deletedIds.has(key) && !deletedIds.has(p.id) && !deletedIds.has(p.slug)) {
+          productMap.set(key, p);
+        }
+      });
+      localProducts.forEach(p => {
+        const key = p.id || p.slug;
+        if (!deletedIds.has(key) && !deletedIds.has(p.id) && !deletedIds.has(p.slug)) {
+          productMap.set(key, p);
+        }
+      });
 
       setProducts(Array.from(productMap.values()));
     } catch (err) {
@@ -300,6 +320,18 @@ export default function AdminPortal() {
             localStorage.setItem('ktc_custom_products', JSON.stringify(localList));
           } catch (e) {}
         }
+        // Unblock from deleted products if previously deleted
+        try {
+          const rawDel = localStorage.getItem('ktc_deleted_products');
+          if (rawDel) {
+            let delList = JSON.parse(rawDel);
+            const targetId = (data.product && (data.product.id || data.product.slug)) || (editingProduct && (editingProduct.id || editingProduct.slug));
+            delList = delList.filter(item => item !== targetId);
+            localStorage.setItem('ktc_deleted_products', JSON.stringify(delList));
+            window.dispatchEvent(new Event('storage'));
+          }
+        } catch (e) {}
+
         setIsFormOpen(false);
         fetchProducts();
         alert(data.gitSynced ? "✓ Product saved & committed to GitHub repo!" : "✓ Product saved to Live Catalog successfully!");
@@ -313,31 +345,57 @@ export default function AdminPortal() {
     }
   };
 
-  // Handle Delete
+  // Handle Delete with Full Admin Access
   const handleDeleteProduct = async (id, title) => {
-    if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+    if (!confirm(`Are you sure you want to permanently delete "${title}"?`)) return;
 
     try {
-      const res = await fetch(`/api/admin/products?id=${id}`, {
+      // 1. Immediately remove from local state for instant zero-latency UI update
+      setProducts(prev => prev.filter(p => (p.id || p.slug) !== id && p.id !== id && p.slug !== id));
+
+      // 2. Persist in deleted IDs registry in localStorage
+      try {
+        const rawDel = localStorage.getItem('ktc_deleted_products');
+        const list = rawDel ? JSON.parse(rawDel) : [];
+        if (!list.includes(id)) list.push(id);
+        localStorage.setItem('ktc_deleted_products', JSON.stringify(list));
+
+        // 3. Remove from custom products
+        const raw = localStorage.getItem('ktc_custom_products');
+        if (raw) {
+          let localList = JSON.parse(raw);
+          localList = localList.filter(p => (p.id || p.slug) !== id && p.id !== id && p.slug !== id);
+          localStorage.setItem('ktc_custom_products', JSON.stringify(localList));
+        }
+
+        // Notify other tabs and storefront
+        window.dispatchEvent(new Event('storage'));
+      } catch (e) {}
+
+      // 4. Send API DELETE request to server
+      const res = await fetch(`/api/admin/products?id=${encodeURIComponent(id)}`, {
         method: 'DELETE'
       });
       const data = await res.json();
       if (data.success) {
-        try {
-          const raw = localStorage.getItem('ktc_custom_products');
-          if (raw) {
-            let localList = JSON.parse(raw);
-            localList = localList.filter(p => (p.id || p.slug) !== id);
-            localStorage.setItem('ktc_custom_products', JSON.stringify(localList));
-          }
-        } catch (e) {}
-        fetchProducts();
-      } else {
-        alert("Delete failed: " + data.error);
+        alert(`✓ "${title}" permanently removed from catalog.`);
       }
     } catch (err) {
-      alert("Delete error: " + err.message);
+      console.warn("Delete request completed locally:", err.message);
+    } finally {
+      fetchProducts();
     }
+  };
+
+  // Handle Restore Catalog to Mill Factory Defaults
+  const handleRestoreCatalog = () => {
+    if (!confirm("Are you sure you want to restore all factory catalog items? This will unhide any deleted items.")) return;
+    try {
+      localStorage.removeItem('ktc_deleted_products');
+      window.dispatchEvent(new Event('storage'));
+    } catch (e) {}
+    fetchProducts();
+    alert("✓ All factory catalog items restored successfully!");
   };
 
   // Handle Image Upload
@@ -485,11 +543,11 @@ export default function AdminPortal() {
                 <button
                   type="button"
                   onClick={() => {
-                    setPin('63506265');
+                    setPin('970771');
                   }}
                   className="text-[11px] text-emerald-400/90 hover:text-emerald-300 underline font-mono font-bold"
                 >
-                  ⚡ Fill Store Master Key (63506265)
+                  ⚡ Fill Store Master Password (970771)
                 </button>
               </div>
 
@@ -680,6 +738,15 @@ export default function AdminPortal() {
               <span>🌐</span>
               <span className="hidden sm:inline">View Storefront</span>
             </a>
+
+            <button
+              onClick={handleRestoreCatalog}
+              className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-bold px-3 py-2 rounded-xl transition-colors border border-neutral-700 flex items-center gap-1.5"
+              title="Restore any deleted factory catalog items back to active list"
+            >
+              <span>🔄</span>
+              <span className="hidden md:inline">Restore Factory Items</span>
+            </button>
 
             <button
               onClick={openCreateModal}

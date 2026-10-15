@@ -34,6 +34,15 @@ function getCustomProductsSnapshot() {
   }
 }
 
+function getDeletedProductsSnapshot() {
+  if (typeof window === 'undefined') return '';
+  try {
+    return localStorage.getItem('ktc_deleted_products') || '';
+  } catch {
+    return '';
+  }
+}
+
 function getServerSnapshot() {
   return '';
 }
@@ -113,19 +122,47 @@ export default function Storefront({ products = [] }) {
     getServerSnapshot
   );
 
+  const deletedProductsRaw = useSyncExternalStore(
+    subscribeCustomProducts,
+    getDeletedProductsSnapshot,
+    getServerSnapshot
+  );
+
   const liveProducts = useMemo(() => {
-    if (!customProductsRaw) return products;
-    try {
-      const custom = JSON.parse(customProductsRaw);
-      if (Array.isArray(custom) && custom.length > 0) {
-        const map = new Map();
-        products.forEach(p => map.set(p.id || p.slug, p));
-        custom.forEach(p => map.set(p.id || p.slug, p));
-        return Array.from(map.values());
+    let deletedSet = new Set();
+    if (deletedProductsRaw) {
+      try {
+        const arr = JSON.parse(deletedProductsRaw);
+        if (Array.isArray(arr)) deletedSet = new Set(arr);
+      } catch {}
+    }
+
+    const map = new Map();
+    // 1. Add server products that are NOT deleted
+    products.forEach(p => {
+      const key = p.id || p.slug;
+      if (!deletedSet.has(key) && !deletedSet.has(p.id) && !deletedSet.has(p.slug)) {
+        map.set(key, p);
       }
-    } catch {}
-    return products;
-  }, [products, customProductsRaw]);
+    });
+
+    // 2. Add or overwrite custom products that are NOT deleted
+    if (customProductsRaw) {
+      try {
+        const custom = JSON.parse(customProductsRaw);
+        if (Array.isArray(custom)) {
+          custom.forEach(p => {
+            const key = p.id || p.slug;
+            if (!deletedSet.has(key) && !deletedSet.has(p.id) && !deletedSet.has(p.slug)) {
+              map.set(key, p);
+            }
+          });
+        }
+      } catch {}
+    }
+
+    return Array.from(map.values());
+  }, [products, customProductsRaw, deletedProductsRaw]);
 
   const activeStudioProduct = studioSelectedProduct || liveProducts[0] || null;
 

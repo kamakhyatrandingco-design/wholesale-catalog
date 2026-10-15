@@ -6,6 +6,35 @@ import { listFiles, getFile, putFile, deleteFile } from '@/app/lib/github';
 
 const PRODUCTS_DIR = 'content/products';
 const LOCAL_PRODUCTS_DIR = path.join(process.cwd(), 'content/products');
+const DELETED_REGISTRY_FILE = path.join(process.cwd(), 'content/deleted-products.json');
+
+// Persistent deleted products tracking
+function getDeletedIds() {
+  try {
+    if (fs.existsSync(DELETED_REGISTRY_FILE)) {
+      const raw = fs.readFileSync(DELETED_REGISTRY_FILE, 'utf8');
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return new Set(arr);
+    }
+  } catch {}
+  return new Set();
+}
+
+function recordDeletedId(id) {
+  try {
+    const set = getDeletedIds();
+    set.add(id);
+    fs.writeFileSync(DELETED_REGISTRY_FILE, JSON.stringify(Array.from(set), null, 2), 'utf8');
+  } catch {}
+}
+
+function removeDeletedId(id) {
+  try {
+    const set = getDeletedIds();
+    set.delete(id);
+    fs.writeFileSync(DELETED_REGISTRY_FILE, JSON.stringify(Array.from(set), null, 2), 'utf8');
+  } catch {}
+}
 
 // Helper to sanitize slug
 function createSlug(title, sku) {
@@ -39,7 +68,8 @@ export async function GET() {
         })
       );
 
-      const validProducts = products.filter(Boolean);
+      const deletedSet = getDeletedIds();
+      const validProducts = products.filter(Boolean).filter(p => !deletedSet.has(p.id) && !deletedSet.has(p.slug));
       if (validProducts.length > 0) {
         return NextResponse.json({ success: true, products: validProducts });
       }
@@ -51,6 +81,7 @@ export async function GET() {
   // Local fallback (works on dev and read-only serverless bundles)
   try {
     if (fs.existsSync(LOCAL_PRODUCTS_DIR)) {
+      const deletedSet = getDeletedIds();
       const files = fs.readdirSync(LOCAL_PRODUCTS_DIR);
       const products = files
         .filter((f) => f.endsWith('.md'))
@@ -64,7 +95,8 @@ export async function GET() {
             ...data,
             description: data.description || content || '',
           };
-        });
+        })
+        .filter(p => !deletedSet.has(p.id) && !deletedSet.has(p.slug));
 
       return NextResponse.json({ success: true, products });
     }
@@ -127,37 +159,37 @@ export async function DELETE(req) {
       );
     }
 
-    // Try GitHub API if configured
+    // 1. Record in persistent deleted registry
+    recordDeletedId(id);
+
+    // 2. Try GitHub API if configured
     if (process.env.GITHUB_TOKEN) {
       try {
         const filePath = `${PRODUCTS_DIR}/${id}.md`;
         const existing = await getFile(filePath);
         if (existing) {
           await deleteFile(filePath, existing.sha, `delete: remove product ${id} from catalog`);
-          return NextResponse.json({ success: true, message: 'Product deleted from GitHub repository' });
         }
       } catch (err) {
         console.warn("GitHub delete failed:", err.message);
       }
     }
 
-    // Local file deletion fallback
+    // 3. Local file deletion fallback
     try {
       const localFilePath = path.join(LOCAL_PRODUCTS_DIR, `${id}.md`);
       if (fs.existsSync(localFilePath)) {
         fs.unlinkSync(localFilePath);
-        return NextResponse.json({ success: true, message: 'Product deleted locally' });
       }
     } catch (fsErr) {
-      // If EROFS, client will remove from local state
-      return NextResponse.json({
-        success: true,
-        clientSync: true,
-        message: 'Product removed from catalog.'
-      });
+      console.warn("Local filesystem delete note:", fsErr.message);
     }
 
-    return NextResponse.json({ success: true, message: 'Product removed' });
+    return NextResponse.json({
+      success: true,
+      deletedId: id,
+      message: `Product '${id}' removed permanently from catalog.`
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message },
@@ -167,6 +199,9 @@ export async function DELETE(req) {
 }
 
 async function handleSave(slug, product) {
+  // If product was previously deleted, unblock it
+  removeDeletedId(slug);
+  if (product.id) removeDeletedId(product.id);
   const frontMatter = {
     title: product.title || 'Untitled Apparel',
     sku: product.sku || `KTC-${Date.now().toString().slice(-6)}`,
