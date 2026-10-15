@@ -107,11 +107,10 @@ Open [http://localhost:3000](http://localhost:3000) to view the storefront, or [
 | `GITHUB_REPO_OWNER` | GitHub organization / username | `kamakhyatrandingco-design` |
 | `GITHUB_REPO_NAME` | Repository name | `wholesale-catalog` |
 | `GITHUB_BRANCH` | Target branch for automated commits | `main` |
-| `ADMIN_PIN` | Master Admin PIN for portal login | `63506265` |
-| `ADMIN_SECRET` | Secret salt for stateless HMAC OTP verification | `ktc-admin-key-63506265` |
+| `ADMIN_PIN` | Master Admin PIN for portal login | Configured in private env |
+| `ADMIN_SECRET` | Secret salt for stateless HMAC OTP verification | Configured in private env |
 | `NEXT_PUBLIC_SHOP_NAME` | Storefront branding display name | `Kamakhya Trading Co` |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | Factory WhatsApp contact number (with country code) | `916350626582` |
-| `HUGGINGFACE_TOKEN` | (Optional) Hugging Face token for remote GPU try-on | `hf_...` |
 | `GITHUB_CLIENT_ID` | (Optional) GitHub OAuth Client ID | — |
 | `GITHUB_CLIENT_SECRET` | (Optional) GitHub OAuth Client Secret | — |
 
@@ -119,16 +118,18 @@ Open [http://localhost:3000](http://localhost:3000) to view the storefront, or [
 
 ## 🚢 Netlify Production Deployment
 
-1. Connect the repository to **Netlify**.
-2. Netlify will detect `netlify.toml` and configure the Next.js runtime.
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/kamakhyatrandingco-design/wholesale-catalog)
+
+1. Click the **Deploy to Netlify** button above or connect `kamakhyatrandingco-design/wholesale-catalog` via the Netlify dashboard.
+2. Under **Site configuration > Site details**, set your preferred site subdomain (e.g. `ktcfashion` or your chosen name).
 3. In **Site Configuration > Environment Variables**, add:
    - `GITHUB_TOKEN` (fine-grained PAT with Contents read/write)
    - `GITHUB_REPO_OWNER` = `kamakhyatrandingco-design`
    - `GITHUB_REPO_NAME` = `wholesale-catalog`
    - `GITHUB_BRANCH` = `main`
-   - `ADMIN_PIN` = `63506265`
+   - `ADMIN_PIN` = your private admin pin
    - `ADMIN_SECRET` = your secret string
-4. Trigger deploy. The application will build cleanly and serve static routes with dynamic API functions.
+4. Trigger deploy. Netlify builds the app via `@netlify/plugin-nextjs` and `.next` publish output.
 
 ---
 
