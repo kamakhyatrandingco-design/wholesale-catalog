@@ -43,6 +43,7 @@ function getCachedCatalog() {
     });
     serverlessCache.set('catalog', products);
     return products.filter(p => !deletedSet.has(p.id) && !deletedSet.has(p.slug));
+
   }
   return [];
 }
@@ -162,6 +163,7 @@ async function handleRoute(req, { params }) {
       const body = await req.json().catch(() => ({}));
       const pin = (body.pin || '').trim();
       if (pin === '970771' || pin === '63506265' || pin === '635062' || pin === (process.env.ADMIN_PIN || '').trim()) {
+
         return NextResponse.json({
           success: true,
           token: 'ktc_adm_valid',
@@ -246,7 +248,7 @@ export async function POST(req, context) {
 export async function PUT(req, context) {
   return handleRoute(req, context);
 }
-
 export async function DELETE(req, context) {
   return handleRoute(req, context);
 }
+
