@@ -140,7 +140,8 @@ export default function MedusaAdminPortal() {
         }
       } catch {}
 
-      // Merge with custom products saved locally
+      // Merge with custom products saved locally (ensures persistence across serverless cold starts)
+
       let localProducts = [];
       try {
         const raw = localStorage.getItem('ktc_custom_products');
@@ -367,7 +368,6 @@ export default function MedusaAdminPortal() {
             localStorage.setItem('ktc_custom_products', JSON.stringify(localList));
           } catch {}
         }
-
         // Unblock from deleted products if previously recorded
         try {
           const rawDel = localStorage.getItem('ktc_deleted_products');
@@ -423,6 +423,7 @@ export default function MedusaAdminPortal() {
         method: 'DELETE'
       });
       alert(`✓ "${title}" permanently removed from catalog.`);
+
     } catch (err) {
       console.warn("Delete request completed locally:", err.message);
     } finally {
@@ -443,6 +444,7 @@ export default function MedusaAdminPortal() {
 
   // Image File Upload
   const handleFileUpload = async (e) => {
+
     const file = e.target.files[0];
     if (!file) return;
 
@@ -577,6 +579,7 @@ export default function MedusaAdminPortal() {
                 </button>
               </div>
 
+
               <div className="pt-4 border-t border-zinc-800 flex justify-between items-center text-xs">
                 <button
                   type="button"
@@ -666,6 +669,7 @@ export default function MedusaAdminPortal() {
   return (
     <div className="min-h-screen bg-[#070a10] text-zinc-100 flex flex-col antialiased">
       <div className="flex flex-1">
+
         
         {/* 1. Medusa Sidebar */}
         <AdminSidebar

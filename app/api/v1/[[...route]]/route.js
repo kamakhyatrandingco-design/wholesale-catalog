@@ -246,7 +246,7 @@ export async function POST(req, context) {
 export async function PUT(req, context) {
   return handleRoute(req, context);
 }
-
 export async function DELETE(req, context) {
   return handleRoute(req, context);
 }
+
