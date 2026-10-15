@@ -10,7 +10,7 @@ This document describes the production-grade **Decoupled Headless Commerce & Mic
 ```mermaid
 flowchart TD
     subgraph Presentation ["1. Presentation Layer (Headless Frontend)"]
-        UI["Next.js 16 App Router (SSR & ISR)<br/>• Luxury B2B Storefront<br/>• Wholesale Line-Sheet Matrix<br/>• AI Virtual Try-On Studio<br/>• Boutique Margin Engine"]
+        UI["Next.js 16 App Router (SSR & ISR)<br/>• Luxury B2B Storefront<br/>• Wholesale Line-Sheet Matrix<br/>• Bilingual AI Wholesale Assistant & Chatbot<br/>• Boutique Margin Engine"]
     end
 
     subgraph Gateway ["2. Orchestration & API Gateway"]
@@ -21,7 +21,7 @@ flowchart TD
         SVC_CAT["Catalog & Inventory Service (Node.js - Port 5001)<br/>• SKU Catalog & Multi-attribute Search<br/>• Flash-Sale Inventory Ledger<br/>• Category Taxonomies"]
         SVC_AUTH["User Auth & Boutique Profile (Node.js - Port 5002)<br/>• Stateless HMAC OTP Tokens<br/>• Role Verification & GSTIN Checks<br/>• Restock Alerts Queue"]
         SVC_ORD["Order & Quotation Service (Node.js - Port 5003)<br/>• Wholesale Volume Discount Tier Engine<br/>• Apparel GST Slab Engine (5% / 12%)<br/>• Proforma Invoice Generator & WhatsApp PO"]
-        SVC_AI["AI & Recommendation Engine (Python - Port 5004)<br/>• Natural Language Intent Parsing<br/>• Neural Virtual Try-On Simulation<br/>• Style & Fabric Similarity Matcher"]
+        SVC_AI["AI & Recommendation Engine (Python - Port 5004)<br/>• Natural Language Intent Parsing<br/>• Wholesale Style & Fabric Recommendations<br/>• Voice & Multilingual Query Processing"]
     end
 
     subgraph Data ["4. Data & Caching Layer"]

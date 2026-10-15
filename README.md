@@ -28,11 +28,9 @@ The application is configured to run on both **Vercel** and **Netlify**:
 - **Wholesale Mode (Default)**: Displays direct mill manufacturing rates, bulk lot pricing, and minimum order quantities (MOQ 25–50 pieces).
 - **Retail Sample Mode**: Single-piece pricing for personal buyers and boutique owners inspecting fabric, stitching, and finishing quality.
 
-### ✨ AI Virtual Try-On Studio
-- Interactive **Photorealistic Model Try-On** with 5 curated Indian & Western model archetypes (Ethnic, Bridal, Western, Partywear, Loungewear).
-- **Interactive Split Slider**: Real-time visual comparison between flat catalog garments and neural model drape.
-- **Custom Buyer Photo Upload**: Test garments on client-provided model photos.
-- Automatic category fallback and color variant switching.
+### 📸 Real Garment Photography & Multi-Source Media
+- **Store Owner Photo Management**: Store owners can add product photos directly using device camera capture (`capture="environment"`), file upload from local storage, or by pasting a direct image link.
+- **High-Fidelity Garment Previews**: Crisp real-world product photographs with color shade variants and full fabric detail inspection for boutique buyers.
 
 ### 🎙️ AI Voice & Natural Language Search
 - Smart search engine that extracts pricing constraints and category intents from natural queries (e.g., *"Ethnic under 1000"*, *"Bulk sets below 600"*, *"Free Size"*).
@@ -69,7 +67,7 @@ The application is configured to run on both **Vercel** and **Netlify**:
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
 - **Content Storage**: Markdown frontmatter parsed via `gray-matter`
 - **Data Persistence**: GitHub REST Contents API + local client state cache fallback
-- **AI Integration**: Gradio client for Hugging Face `IDM-VTON` with real-time neural fallback
+- **AI Assistant**: Conversational bilingual wholesale stylist (Hindi + English) with Web Speech voice recognition and TTS audio playback
 
 ---
 

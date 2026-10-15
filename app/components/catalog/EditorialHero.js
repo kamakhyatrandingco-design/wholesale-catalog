@@ -3,7 +3,6 @@
 export default function EditorialHero({
   productCount = 0,
   onExploreCatalog,
-  onOpenAiStudio,
   onSelectCategory
 }) {
   const categoryTiles = [
@@ -68,13 +67,15 @@ export default function EditorialHero({
                 Explore Full Catalog ({productCount} SKUs)
               </button>
 
-              <button
-                onClick={onOpenAiStudio}
+              <a
+                href="https://wa.me/916350626582?text=Namaste%20Kamakhya%20Trading%20Co!%20I%20want%20to%20view%20your%20latest%20factory%20wholesale%20line-sheets."
+                target="_blank"
+                rel="noopener noreferrer"
                 className="px-5 py-3.5 bg-white hover:bg-neutral-50 text-neutral-950 border border-neutral-300 font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-2xs flex items-center gap-2 active:scale-95 cursor-pointer"
               >
-                <span>✨</span>
-                <span>Launch AI Try-On Studio</span>
-              </button>
+                <span>💬</span>
+                <span>Direct Mill WhatsApp</span>
+              </a>
             </div>
 
             {/* Proof Points Strip */}

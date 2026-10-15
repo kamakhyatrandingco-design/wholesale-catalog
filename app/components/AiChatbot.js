@@ -6,7 +6,6 @@ const OWNER_PHONE = "916350626582";
 
 export default function AiChatbot({
   products = [],
-  onOpenTryOn = null,
   onOpenCalculator = null,
   onOpenRestock = null
 }) {
@@ -139,17 +138,17 @@ export default function AiChatbot({
       };
     }
 
-    // 5. Try-On questions
-    if (/tryon|try on|model|pehan|fitting|look/i.test(q)) {
+    // 5. Fitting and Sizing questions
+    if (/size|sizing|fitting|pehan|look|alteration|tryon|try on/i.test(q)) {
       if (isHindi) {
         return {
-          text: "Aap hamare AI Virtual Try-On Studio me koi bhi dress 5 Indian models par ya apni custom photo upload karke dekh sakte hain! Zero photoshoot cost.",
-          action: 'open_tryon'
+          text: "Hamare sabhi suits, kurtis aur gowns standard Indian boutique sizing (M, L, XL, XXL) me ready stock aate hain, jinme 2-inch ka extra margin rehta hai. Aap single sample piece mangwa kar apne customers ke liye fitting check kar sakte hain!",
+          action: 'wholesale_info'
         };
       }
       return {
-        text: "You can drape any catalog item on 5 Indian & Western model archetypes or upload your own client photo in our AI Virtual Try-On Studio!",
-        action: 'open_tryon'
+        text: "All our apparel is manufactured to standard Indian boutique sizing (M, L, XL, XXL) with 2-inch side alteration margins. You can order a single sample piece to test client fitting and fabric drape!",
+        action: 'wholesale_info'
       };
     }
 
@@ -182,12 +181,12 @@ export default function AiChatbot({
       const prodList = matchingProducts.map(p => `• *${p.title}* (₹${p.wholesale_price}/pc, MOQ: ${p.moq || 30})`).join('\n');
       if (isHindi) {
         return {
-          text: `Aapki pasand ke hisab se ye top wholesale designs ready hain:\n\n${prodList}\n\nAap inko AI Studio me try kar sakte hain ya WhatsApp par order kar sakte hain!`,
+          text: `Aapki pasand ke hisab se ye top wholesale designs ready hain:\n\n${prodList}\n\nAap inka wholesale lot direct WhatsApp par order kar sakte hain ya Bulk PO me add kar sakte hain!`,
           recommended: matchingProducts
         };
       }
       return {
-        text: `Here are top factory lots matching your query:\n\n${prodList}\n\nYou can visualize them in AI Try-On Studio or send a WhatsApp quotation!`,
+        text: `Here are top factory lots matching your query:\n\n${prodList}\n\nYou can order these directly on WhatsApp or add them to your wholesale Purchase Order!`,
         recommended: matchingProducts
       };
     }
@@ -347,17 +346,6 @@ export default function AiChatbot({
                               <span className="font-bold text-[11px] block truncate">{item.title}</span>
                               <span className="text-[10px] text-emerald-600 font-black">₹{item.wholesale_price}/pc</span>
                             </div>
-                            {onOpenTryOn && (
-                              <button
-                                onClick={() => {
-                                  onOpenTryOn(item);
-                                  setIsOpen(false);
-                                }}
-                                className="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-[10px] font-bold border border-purple-200"
-                              >
-                                Try On ✨
-                              </button>
-                            )}
                           </div>
                         ))}
                       </div>
@@ -373,18 +361,6 @@ export default function AiChatbot({
                         className="mt-2 w-full py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-[11px] font-bold border border-emerald-200 text-center"
                       >
                         Open Boutique Margin Estimator 📊
-                      </button>
-                    )}
-
-                    {msg.action === 'open_tryon' && onOpenTryOn && (
-                      <button
-                        onClick={() => {
-                          onOpenTryOn(products[0]);
-                          setIsOpen(false);
-                        }}
-                        className="mt-2 w-full py-1.5 px-2 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-lg text-[11px] font-bold border border-purple-200 text-center"
-                      >
-                        Launch AI Virtual Try-On Studio ✨
                       </button>
                     )}
 

@@ -11,7 +11,6 @@ import ProductCard from './components/catalog/ProductCard';
 import WholesaleLineSheet from './components/catalog/WholesaleLineSheet';
 import ProductQuickView from './components/catalog/ProductQuickView';
 import BulkPoDrawer from './components/order/BulkPoDrawer';
-import AiTryOnStudio from './components/AiTryOnStudio';
 import BoutiqueRoiCalculator from './components/BoutiqueRoiCalculator';
 import AiChatbot from './components/AiChatbot';
 import UserAuthModal from './components/UserAuthModal';
@@ -55,15 +54,12 @@ export default function Storefront({ products = [] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [purchaseMode, setPurchaseMode] = useState("wholesale"); // 'wholesale' | 'retail'
   const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'linesheet'
-  const [aiViewModel, setAiViewModel] = useState({}); // toggle product view: catalog vs ai model
   const [sortBy, setSortBy] = useState("default");
 
   // 2. Interactive Modals State
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [quoteItems, setQuoteItems] = useState([]);
   const [isQuoteDrawerOpen, setIsQuoteDrawerOpen] = useState(false);
-  const [isAiStudioOpen, setIsAiStudioOpen] = useState(false);
-  const [studioSelectedProduct, setStudioSelectedProduct] = useState(null);
   const [isRoiModalOpen, setIsRoiModalOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -163,8 +159,6 @@ export default function Storefront({ products = [] }) {
 
     return Array.from(map.values());
   }, [products, customProductsRaw, deletedProductsRaw]);
-
-  const activeStudioProduct = studioSelectedProduct || liveProducts[0] || null;
 
   // 5. Natural Language Search & Sorting Engine
   const filteredProducts = useMemo(() => {
@@ -308,14 +302,9 @@ export default function Storefront({ products = [] }) {
         quoteItemCount={quoteItems.length}
         quoteTotalAmount={totalQuoteAmount}
         onOpenCart={() => setIsQuoteDrawerOpen(true)}
-        onOpenAiStudio={() => {
-          setIsAiStudioOpen(true);
-          if (liveProducts.length > 0 && !studioSelectedProduct) {
-            setStudioSelectedProduct(liveProducts[0]);
-          }
-        }}
         onOpenCalculator={() => setIsRoiModalOpen(true)}
         onOpenAuth={() => setIsAuthModalOpen(true)}
+        onOpenAbout={() => setIsAboutModalOpen(true)}
         onResetFilters={resetAllFilters}
       />
 
@@ -323,7 +312,6 @@ export default function Storefront({ products = [] }) {
       <EditorialHero
         productCount={liveProducts.length}
         onExploreCatalog={scrollToCatalog}
-        onOpenAiStudio={() => setIsAiStudioOpen(true)}
         onSelectCategory={(cat) => {
           setActiveCategory(cat);
           scrollToCatalog();
@@ -388,14 +376,8 @@ export default function Storefront({ products = [] }) {
                 onSelectColor={(id, idx) => setSelectedColors({ ...selectedColors, [id]: idx })}
                 selectedSize={selectedSizes[product.id]}
                 onSelectSize={(id, size) => setSelectedSizes({ ...selectedSizes, [id]: size })}
-                isAiView={Boolean(aiViewModel[product.id])}
-                onToggleAiView={(id) => setAiViewModel({ ...aiViewModel, [id]: !aiViewModel[id] })}
                 onQuickView={(p) => setQuickViewProduct(p)}
                 onAddToQuote={addToQuote}
-                onOpenAiStudio={(p) => {
-                  setStudioSelectedProduct(p);
-                  setIsAiStudioOpen(true);
-                }}
                 onRestockRequest={(p) => {
                   setRestockProduct(p);
                   setIsAuthModalOpen(true);
@@ -414,7 +396,7 @@ export default function Storefront({ products = [] }) {
         onOpenGuide={() => setIsGuideOpen(true)}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenCalculator={() => setIsRoiModalOpen(true)}
-        onOpenAiStudio={() => setIsAiStudioOpen(true)}
+        onOpenAbout={() => setIsAboutModalOpen(true)}
       />
 
       {/* 7. MOBILE FLOATING ACTION DOCK */}
@@ -422,12 +404,6 @@ export default function Storefront({ products = [] }) {
         quoteItemCount={quoteItems.length}
         quoteTotalAmount={totalQuoteAmount}
         onOpenCart={() => setIsQuoteDrawerOpen(true)}
-        onOpenAiStudio={() => {
-          setIsAiStudioOpen(true);
-          if (liveProducts.length > 0 && !studioSelectedProduct) {
-            setStudioSelectedProduct(liveProducts[0]);
-          }
-        }}
         onOpenCalculator={() => setIsRoiModalOpen(true)}
         whatsappNumber={WHATSAPP_NUMBER}
         onScrollToCatalog={scrollToCatalog}
@@ -490,31 +466,17 @@ export default function Storefront({ products = [] }) {
         onClose={() => setQuickViewProduct(null)}
         purchaseMode={purchaseMode}
         onAddToQuote={addToQuote}
-        onOpenAiStudio={(p) => {
-          setStudioSelectedProduct(p);
-          setIsAiStudioOpen(true);
-        }}
         whatsappNumber={WHATSAPP_NUMBER}
       />
 
-      {/* 11. AI TRY-ON STUDIO MODAL */}
-      <AiTryOnStudio
-        isOpen={isAiStudioOpen}
-        onClose={() => setIsAiStudioOpen(false)}
-        products={liveProducts}
-        initialProduct={activeStudioProduct}
-        whatsappNumber={WHATSAPP_NUMBER}
-        onAddToQuote={(prod) => addToQuote(prod)}
-      />
-
-      {/* 12. BOUTIQUE ROI & MARGIN CALCULATOR */}
+      {/* 11. BOUTIQUE ROI & MARGIN CALCULATOR */}
       <BoutiqueRoiCalculator
         isOpen={isRoiModalOpen}
         onClose={() => setIsRoiModalOpen(false)}
         whatsappNumber={WHATSAPP_NUMBER}
       />
 
-      {/* 13. BUYER AUTH & RESTOCK REQUEST MODAL */}
+      {/* 12. BUYER AUTH & RESTOCK REQUEST MODAL */}
       <UserAuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
@@ -522,19 +484,20 @@ export default function Storefront({ products = [] }) {
         initialRestockProduct={restockProduct}
       />
 
-      {/* 14. FIRST-TIME BUYER ONBOARDING GUIDE */}
+      {/* 13. FIRST-TIME BUYER ONBOARDING GUIDE */}
       <NewUserGuide
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}
       />
 
+      {/* 14. ABOUT KAMAKHYA & MULTI-CLOUD DEPLOYMENTS MODAL */}
+      <AboutModal
+        isOpen={isAboutModalOpen}
+        onClose={() => setIsAboutModalOpen(false)}
+      />
       {/* 15. MULTILINGUAL AI CHATBOT (Hindi / English / Voice) */}
       <AiChatbot
         products={liveProducts}
-        onOpenTryOn={(p) => {
-          setStudioSelectedProduct(p);
-          setIsAiStudioOpen(true);
-        }}
         onOpenCalculator={() => setIsRoiModalOpen(true)}
         onOpenRestock={() => setIsAuthModalOpen(true)}
       />

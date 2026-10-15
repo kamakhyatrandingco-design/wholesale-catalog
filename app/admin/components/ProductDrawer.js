@@ -12,8 +12,6 @@ export default function ProductDrawer({
   isSaving,
   isUploading,
   onFileUpload,
-  isGeneratingAi,
-  onGenerateAiModel,
   categories = [],
   fabrics = [],
   sizesOptions = []
@@ -149,7 +147,7 @@ export default function ProductDrawer({
                   : 'border-transparent text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              4. Media & AI Studio
+              4. Product Photos & Media
             </button>
           </div>
 
@@ -378,66 +376,135 @@ export default function ProductDrawer({
               </div>
             )}
 
-            {/* TAB 4: MEDIA & AI MODEL STUDIO */}
+            {/* TAB 4: PRODUCT PHOTOS & MEDIA */}
             {activeDrawerTab === 'media' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-zinc-300 font-semibold block mb-1">Catalog Garment Image</label>
-                  <input
-                    type="text"
-                    value={formData.image}
-                    onChange={e => setFormData(prev => ({ ...prev, image: e.target.value }))}
-                    placeholder="https://... or upload below"
-                    className="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-white text-xs font-mono"
-                  />
-
-                  {/* File Upload Trigger */}
-                  <div className="mt-2 flex items-center gap-2">
-                    <label className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs cursor-pointer border border-zinc-700 transition-colors">
-                      {isUploading ? 'Uploading Image...' : '📁 Upload Image File'}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={onFileUpload}
-                        className="hidden"
-                        disabled={isUploading}
-                      />
-                    </label>
-                    <span className="text-[10px] text-zinc-500">JPG, PNG, WebP supported</span>
-                  </div>
+              <div className="space-y-6">
+                {/* 1. Photography Instructions */}
+                <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
+                  <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                    <span>📸</span>
+                    <span>Product Photography Management</span>
+                  </h3>
+                  <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                    Add high-quality garment photos for wholesale buyers. You can snap a photo directly using your device camera, select files from device storage, or paste a direct image URL.
+                  </p>
                 </div>
 
-                {/* AI Try-On Model Image */}
-                <div className="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-semibold text-white text-xs flex items-center gap-1.5">
-                        <span>✨ AI Virtual Try-On Model Preview</span>
-                      </span>
-                      <p className="text-[10px] text-zinc-400 mt-0.5">Generate realistic on-model photoshoot previews</p>
+                {/* 2. Photo Upload Actions (Camera & Storage) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Option A: Device Camera */}
+                  <label className="flex flex-col items-center justify-center p-5 rounded-xl bg-zinc-900 hover:bg-zinc-800/90 border border-zinc-700/80 hover:border-amber-400/60 cursor-pointer transition-all text-center group shadow-sm">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={onFileUpload}
+                      className="hidden"
+                      disabled={isUploading}
+                    />
+                    <div className="w-12 h-12 rounded-full bg-amber-400/10 text-amber-300 flex items-center justify-center text-xl mb-2.5 group-hover:scale-110 group-hover:bg-amber-400/20 transition-all">
+                      📷
                     </div>
+                    <span className="text-xs font-bold text-white">Take Photo with Camera</span>
+                    <span className="text-[10px] text-zinc-400 mt-1">Use mobile or webcam camera</span>
+                  </label>
 
-                    <button
-                      type="button"
-                      onClick={onGenerateAiModel}
-                      disabled={isGeneratingAi || !formData.image}
-                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-xs disabled:opacity-50 transition-all"
-                    >
-                      {isGeneratingAi ? 'Synthesizing...' : 'Generate with AI'}
-                    </button>
+                  {/* Option B: Device Storage */}
+                  <label className="flex flex-col items-center justify-center p-5 rounded-xl bg-zinc-900 hover:bg-zinc-800/90 border border-zinc-700/80 hover:border-amber-400/60 cursor-pointer transition-all text-center group shadow-sm">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={onFileUpload}
+                      className="hidden"
+                      disabled={isUploading}
+                    />
+                    <div className="w-12 h-12 rounded-full bg-blue-400/10 text-blue-300 flex items-center justify-center text-xl mb-2.5 group-hover:scale-110 group-hover:bg-blue-400/20 transition-all">
+                      📁
+                    </div>
+                    <span className="text-xs font-bold text-white">Upload from Storage</span>
+                    <span className="text-[10px] text-zinc-400 mt-1">Select JPG, PNG, WebP files</span>
+                  </label>
+                </div>
+
+                {/* Option C: Direct Image URL / Link */}
+                <div className="bg-zinc-900/70 p-4 rounded-xl border border-zinc-800 space-y-2">
+                  <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                    <span>🔗</span>
+                    <span>Or Paste Image Link (URL)</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={formData.image || ''}
+                      onChange={e => setFormData(prev => ({ ...prev, image: e.target.value }))}
+                      placeholder="https://images.unsplash.com/... or direct image link"
+                      className="flex-1 bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-amber-400"
+                    />
+                    {formData.image && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                        className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-semibold transition-colors"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-zinc-500 block">
+                    Paste any direct image URL. High-resolution portrait photographs (800x1000px) look best in catalog.
+                  </span>
+                </div>
+
+                {/* Upload Status Bar */}
+                {isUploading && (
+                  <div className="flex items-center justify-center gap-2.5 py-3 px-4 bg-amber-400/10 border border-amber-400/30 rounded-xl text-amber-300 text-xs font-medium">
+                    <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Processing and optimizing garment photo...</span>
+                  </div>
+                )}
+
+                {/* 3. Live Garment Photo Preview Container */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-semibold text-zinc-300">Live Catalog Photo Preview</label>
+                    {formData.image && (
+                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20 font-bold">
+                        ✓ Primary Image Set
+                      </span>
+                    )}
                   </div>
 
-                  <input
-                    type="text"
-                    value={formData.ai_model_image}
-                    onChange={e => setFormData(prev => ({ ...prev, ai_model_image: e.target.value }))}
-                    placeholder="AI Model Studio URL"
-                    className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-xs font-mono"
-                  />
-
-                  {formData.ai_model_image && (
-                    <div className="w-32 h-44 rounded-lg overflow-hidden bg-zinc-800 border border-zinc-700 mt-2">
-                      <img src={formData.ai_model_image} alt="AI Model Preview" className="w-full h-full object-cover" />
+                  {formData.image ? (
+                    <div className="relative group bg-zinc-950 rounded-xl border border-zinc-700/80 overflow-hidden max-w-sm shadow-xl">
+                      <div className="aspect-[4/5] w-full overflow-hidden bg-zinc-900 flex items-center justify-center">
+                        <img
+                          src={formData.image}
+                          alt="Garment Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800";
+                          }}
+                        />
+                      </div>
+                      <div className="p-3 bg-zinc-900/95 border-t border-zinc-800 flex items-center justify-between">
+                        <span className="text-[11px] text-zinc-400 truncate max-w-[200px] font-mono">
+                          {formData.image.startsWith('data:') ? 'Local camera/storage upload' : formData.image}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                          className="text-xs text-red-400 hover:text-red-300 font-semibold px-2.5 py-1 rounded bg-red-400/10 hover:bg-red-400/20 transition-colors"
+                        >
+                          ✕ Remove Photo
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="aspect-[16/9] w-full rounded-xl border-2 border-dashed border-zinc-800 bg-zinc-950/40 flex flex-col items-center justify-center text-zinc-500 text-xs">
+                      <span className="text-2xl mb-1">📷</span>
+                      <span className="font-semibold text-zinc-300">No Photo Selected Yet</span>
+                      <span className="text-[11px] text-zinc-500 mt-0.5">Use camera, upload from storage, or paste a URL above</span>
                     </div>
                   )}
                 </div>

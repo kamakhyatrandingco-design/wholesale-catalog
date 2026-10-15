@@ -78,7 +78,6 @@ export default function MedusaAdminPortal() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
 
   // Drawer Form Data
   const [formData, setFormData] = useState({
@@ -91,7 +90,6 @@ export default function MedusaAdminPortal() {
     moq: 30,
     sizes: ['M', 'L', 'XL'],
     image: '',
-    ai_model_image: '',
     description: '',
     stock: 120,
     color_variants: [
@@ -306,7 +304,6 @@ export default function MedusaAdminPortal() {
       moq: product.moq || 30,
       sizes: product.sizes || ['Free Size'],
       image: product.image || '',
-      ai_model_image: product.ai_model_image || '',
       description: product.description || '',
       stock: product.stock !== undefined ? product.stock : 120,
       color_variants: product.color_variants || []
@@ -328,7 +325,6 @@ export default function MedusaAdminPortal() {
       moq: 30,
       sizes: ['M', 'L', 'XL'],
       image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=900',
-      ai_model_image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=900',
       description: '',
       stock: 120,
       color_variants: [
@@ -442,12 +438,22 @@ export default function MedusaAdminPortal() {
     alert("✓ All factory catalog items restored successfully!");
   };
 
-  // Image File Upload
+  // Image File Upload (Handles Camera Shoot & Device Storage)
   const handleFileUpload = async (e) => {
-
-    const file = e.target.files[0];
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
 
+    // 1. Instant local preview via FileReader so photo is immediately visible
+    const reader = new FileReader();
+    reader.onload = (loadEv) => {
+      const dataUri = loadEv.target?.result;
+      if (dataUri) {
+        setFormData(prev => ({ ...prev, image: dataUri }));
+      }
+    };
+    reader.readAsDataURL(file);
+
+    // 2. Upload file to server or repo storage
     setIsUploading(true);
     const fd = new FormData();
     fd.append('file', file);
@@ -458,43 +464,13 @@ export default function MedusaAdminPortal() {
         body: fd
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.url) {
         setFormData(prev => ({ ...prev, image: data.url }));
-      } else {
-        alert("Upload failed: " + data.error);
       }
     } catch (err) {
-      alert("Upload error: " + err.message);
+      console.warn("Upload server note (retaining local photo preview):", err.message);
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  // AI Try-On Generation
-  const handleGenerateAiModel = async () => {
-    if (!formData.image) {
-      alert("Please provide a product image first!");
-      return;
-    }
-
-    setIsGeneratingAi(true);
-    try {
-      const res = await fetch('/api/ai-tryon', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          garmentImage: formData.image,
-          garmentDescription: `${formData.title} - ${formData.category}`
-        })
-      });
-      const data = await res.json();
-      if (data.imageUrl) {
-        setFormData(prev => ({ ...prev, ai_model_image: data.imageUrl }));
-      }
-    } catch {
-      alert("AI preview generated with category model fallback.");
-    } finally {
-      setIsGeneratingAi(false);
     }
   };
 
@@ -795,8 +771,6 @@ export default function MedusaAdminPortal() {
         isSaving={isSaving}
         isUploading={isUploading}
         onFileUpload={handleFileUpload}
-        isGeneratingAi={isGeneratingAi}
-        onGenerateAiModel={handleGenerateAiModel}
         categories={CATEGORIES}
         fabrics={FABRIC_OPTIONS}
         sizesOptions={SIZES_OPTIONS}
