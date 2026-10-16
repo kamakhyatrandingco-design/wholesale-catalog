@@ -71,7 +71,7 @@ export const metadata = {
     images: ["https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=1200"],
   },
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "",
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "CuCHH5CkANeImGaxE_wYeGO_j9SZpOti2ZPOHd379YA",
   },
 };
 
