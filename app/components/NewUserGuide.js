@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-const GUIDE_STEPS = [
+const WHOLESALE_GUIDE_STEPS = [
   {
     step: 1,
     title: 'Factory Wholesale vs Single Retail Mode',
@@ -44,12 +44,56 @@ const GUIDE_STEPS = [
   }
 ];
 
-export default function NewUserGuide({ isOpen, onClose }) {
+const RETAIL_GUIDE_STEPS = [
+  {
+    step: 1,
+    title: 'Curated Designer Apparel',
+    description: 'Explore hand-finished ethnic couture and festive silhouettes.',
+    details: [
+      'Authentic women\'s and girls\' ethnic wear, bridal lehengas, western outfits, and celebration frocks.',
+      'All items available for individual retail purchase with no minimum order requirements.',
+      'Browse through high-resolution photography capturing authentic fabric textures and zari detailing.'
+    ]
+  },
+  {
+    step: 2,
+    title: 'Garment Sizing & Fit Assurance',
+    description: 'Standardized Indian boutique sizes with generous alteration margins.',
+    details: [
+      'Standard boutique sizing available from M to XXL across suits, kurtis, and gowns.',
+      'Every piece includes generous 2-inch internal seam margins for easy custom alterations.',
+      'Detailed fabric descriptions including Viscose Georgette, Chanderi, and Organza.'
+    ]
+  },
+  {
+    step: 3,
+    title: 'Shopping Bag & WhatsApp Checkout',
+    description: 'Assemble your selected designs and confirm directly on WhatsApp.',
+    details: [
+      'Click "+ Add to Bag" on any design to select your color and preferred size.',
+      'Open the Shopping Bag anytime to view your selected pieces and transparent order total.',
+      'Click "Order via WhatsApp" to share your order with our concierge (+91 63506 26582) for instant confirmation.'
+    ]
+  },
+  {
+    step: 4,
+    title: 'Insured Doorstep Shipping & Tracking',
+    description: 'Fast, secure shipping across all Indian postal pin codes.',
+    details: [
+      'Dispatches prepared within 24 to 48 hours directly from our design hubs in Surat and Jaipur.',
+      'Live tracking notifications and courier consignment details shared directly to your WhatsApp.',
+      'Transparent, all-inclusive pricing with standard GST and zero hidden costs.'
+    ]
+  }
+];
+
+export default function NewUserGuide({ isOpen, onClose, isVercel = false }) {
   const [activeStep, setActiveStep] = useState(0);
 
   if (!isOpen) return null;
 
-  const current = GUIDE_STEPS[activeStep];
+  const steps = isVercel ? RETAIL_GUIDE_STEPS : WHOLESALE_GUIDE_STEPS;
+  const current = steps[activeStep] || steps[0];
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-6">
@@ -69,10 +113,12 @@ export default function NewUserGuide({ isOpen, onClose }) {
             </div>
             <div>
               <h2 className="text-lg font-black text-gray-900 tracking-tight uppercase">
-                B2B Buyer Onboarding Guide
+                {isVercel ? "KTC Fashion Shopping Guide" : "B2B Buyer Onboarding Guide"}
               </h2>
               <p className="text-xs text-gray-500">
-                How to navigate Kamakhya wholesale catalog, line-sheets &amp; factory ordering
+                {isVercel
+                  ? "How to explore curated designer apparel, select sizing & complete doorstep orders"
+                  : "How to navigate Kamakhya wholesale catalog, line-sheets & factory ordering"}
               </p>
             </div>
           </div>
@@ -89,7 +135,7 @@ export default function NewUserGuide({ isOpen, onClose }) {
 
         {/* Step Indicator Buttons */}
         <div className="grid grid-cols-4 gap-2 mb-6">
-          {GUIDE_STEPS.map((step, idx) => (
+          {steps.map((step, idx) => (
             <button
               key={step.step}
               onClick={() => setActiveStep(idx)}
@@ -141,7 +187,7 @@ export default function NewUserGuide({ isOpen, onClose }) {
           </button>
 
           <div className="flex gap-1.5">
-            {GUIDE_STEPS.map((_, idx) => (
+            {steps.map((_, idx) => (
               <span
                 key={idx}
                 className={`w-2 h-2 rounded-sm transition-all ${
@@ -151,9 +197,9 @@ export default function NewUserGuide({ isOpen, onClose }) {
             ))}
           </div>
 
-          {activeStep < GUIDE_STEPS.length - 1 ? (
+          {activeStep < steps.length - 1 ? (
             <button
-              onClick={() => setActiveStep((prev) => Math.min(GUIDE_STEPS.length - 1, prev + 1))}
+              onClick={() => setActiveStep((prev) => Math.min(steps.length - 1, prev + 1))}
               className="px-5 py-2.5 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer"
             >
               Next Step &rarr;

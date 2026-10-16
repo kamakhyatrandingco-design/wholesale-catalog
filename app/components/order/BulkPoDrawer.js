@@ -9,7 +9,8 @@ export default function BulkPoDrawer({
   onUpdateQuantity,
   onRemoveItem,
   onClearItems,
-  whatsappNumber = "916350626582"
+  whatsappNumber = "916350626582",
+  isVercel = false
 }) {
   const [copiedQuote, setCopiedQuote] = useState(false);
   const [showInvoicePreview, setShowInvoicePreview] = useState(false);
@@ -19,39 +20,50 @@ export default function BulkPoDrawer({
   const totalPieces = items.reduce((acc, item) => acc + item.quantity, 0);
   const totalAmount = items.reduce((acc, item) => acc + (item.quantity * item.price), 0);
 
-  // Volume subsidy calculation
+  // Volume subsidy calculation (Wholesale only)
   let volumeBenefit = null;
-  if (totalPieces >= 100) {
-    const rebateAmount = Math.round(totalAmount * 0.03);
-    volumeBenefit = {
-      level: 3,
-      title: "Tier 3: Free Pan-India Freight + 3% Mill Cash Rebate",
-      savings: `₹${rebateAmount.toLocaleString('en-IN')}`,
-      note: "Maximum factory tier unlocked!"
-    };
-  } else if (totalPieces >= 50) {
-    volumeBenefit = {
-      level: 2,
-      title: "Tier 2: 100% Free Pan-India Transport Freight Subsidy",
-      savings: "₹1,500 Freight Waived",
-      note: `Add ${100 - totalPieces} more pieces for 3% extra factory lot rebate!`
-    };
-  } else {
-    volumeBenefit = {
-      level: 1,
-      title: "Tier 1: Standard Mill Direct Rates",
-      note: `Add ${50 - totalPieces} more pieces to qualify for Free Pan-India Freight!`
-    };
+  if (!isVercel) {
+    if (totalPieces >= 100) {
+      const rebateAmount = Math.round(totalAmount * 0.03);
+      volumeBenefit = {
+        level: 3,
+        title: "Tier 3: Free Pan-India Freight + 3% Mill Cash Rebate",
+        savings: `₹${rebateAmount.toLocaleString('en-IN')}`,
+        note: "Maximum factory tier unlocked!"
+      };
+    } else if (totalPieces >= 50) {
+      volumeBenefit = {
+        level: 2,
+        title: "Tier 2: 100% Free Pan-India Transport Freight Subsidy",
+        savings: "₹1,500 Freight Waived",
+        note: `Add ${100 - totalPieces} more pieces for 3% extra factory lot rebate!`
+      };
+    } else {
+      volumeBenefit = {
+        level: 1,
+        title: "Tier 1: Standard Mill Direct Rates",
+        note: `Add ${50 - totalPieces} more pieces to qualify for Free Pan-India Freight!`
+      };
+    }
   }
 
-  // Generate WhatsApp Master Purchase Order
+  // Generate WhatsApp Master Order Text
   const generateMasterPOText = () => {
+    if (isVercel) {
+      let msg = `Namaste KTC Fashion!\n\nI want to place an order from your collection:\n\n*ORDER ITEMS:*\n`;
+      items.forEach((item, idx) => {
+        msg += `\n${idx + 1}. *${item.title}* (${item.sku})\n   • Color: ${item.color} | Size: ${item.size}\n   • Qty: ${item.quantity} pc(s) @ ₹${item.price} = ₹${(item.quantity * item.price).toLocaleString('en-IN')}\n`;
+      });
+      msg += `\n-------------------------\n*Total Items:* ${items.length}\n*Total Pieces:* ${totalPieces}\n*Estimated Total:* ₹${totalAmount.toLocaleString('en-IN')}\n\n*Customer Details:*\n• Name:\n• Delivery Address & Pincode:\n• Contact Phone:\n\nPlease confirm availability and share payment link.`;
+      return msg;
+    }
+
     let msg = `Namaste Kamakhya Trading Co!\n\nI want to place an official *Bulk Wholesale Purchase Order*:\n\n*PURCHASE ORDER BREAKDOWN:*\n`;
     items.forEach((item, idx) => {
       msg += `\n${idx + 1}. *${item.title}* (${item.sku})\n   • Variant: Color: ${item.color} | Size: ${item.size}\n   • Qty: ${item.quantity} pcs @ ₹${item.price}/pc = ₹${(item.quantity * item.price).toLocaleString('en-IN')}\n`;
     });
     msg += `\n-------------------------\n*Total Lots:* ${items.length} SKUs\n*Total Quantity:* ${totalPieces} pcs\n*Estimated Subtotal:* ₹${totalAmount.toLocaleString('en-IN')}\n`;
-    if (totalPieces >= 50) {
+    if (totalPieces >= 50 && volumeBenefit) {
       msg += `*Eligible Volume Benefit:* ${volumeBenefit.title}\n`;
     }
     msg += `\n*Buyer Business Profile:*\n• Boutique / Firm Name:\n• GSTIN / City, State:\n• Preferred Transport Hub:\n\nPlease confirm ready stock availability and issue the formal GST proforma invoice.`;
@@ -95,17 +107,17 @@ export default function BulkPoDrawer({
               </div>
               <div>
                 <h3 className="font-bold text-sm sm:text-base leading-tight">
-                  Bulk Purchase Order Bag
+                  {isVercel ? 'Your Shopping Bag' : 'Bulk Purchase Order Bag'}
                 </h3>
                 <p className="text-[11px] text-neutral-400">
-                  {items.length} SKUs • Direct Mill Invoicing
+                  {isVercel ? `${items.length} Selected Designs` : `${items.length} SKUs • Direct Mill Invoicing`}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
-              aria-label="Close PO Drawer"
+              aria-label="Close Drawer"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -113,8 +125,8 @@ export default function BulkPoDrawer({
             </button>
           </div>
 
-          {/* 2. Volume Tier Banner */}
-          {items.length > 0 && (
+          {/* 2. Volume Tier Banner (Only on Netlify wholesale) */}
+          {!isVercel && items.length > 0 && volumeBenefit && (
             <div className="bg-neutral-50 border-b border-neutral-200 px-4 py-2.5 text-xs">
               <div className="flex items-center justify-between mb-1">
                 <span className="font-bold text-neutral-800 flex items-center gap-1.5">
@@ -142,9 +154,13 @@ export default function BulkPoDrawer({
                 <svg className="w-12 h-12 text-neutral-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
-                <p className="text-sm font-bold text-neutral-700">Your bulk PO bag is empty</p>
+                <p className="text-sm font-bold text-neutral-700">
+                  {isVercel ? 'Your shopping bag is empty' : 'Your bulk PO bag is empty'}
+                </p>
                 <p className="text-xs text-neutral-400 mt-1 max-w-xs mx-auto">
-                  Click &ldquo;+ Add to Bulk PO&rdquo; on any garment card or line-sheet to assemble an order.
+                  {isVercel
+                    ? 'Click "+ Add to Bag" on any garment to start an order.'
+                    : 'Click "+ Add to Bulk PO" on any garment card or line-sheet to assemble an order.'}
                 </p>
               </div>
             ) : (
@@ -190,7 +206,7 @@ export default function BulkPoDrawer({
                           ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                         </span>
                         <span className="text-[10px] text-neutral-500 font-normal">
-                          {' '}(₹{item.price}/pc)
+                          {' '}(₹{item.price}{isVercel ? '' : '/pc'})
                         </span>
                       </div>
 
@@ -228,11 +244,11 @@ export default function BulkPoDrawer({
               {/* Totals */}
               <div className="space-y-1.5 text-xs text-neutral-600">
                 <div className="flex justify-between">
-                  <span>Total Lots / SKUs:</span>
+                  <span>{isVercel ? 'Total Items:' : 'Total Lots / SKUs:'}</span>
                   <span className="font-bold text-neutral-950">{items.length} items</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Total Garments (Pieces):</span>
+                  <span>{isVercel ? 'Total Garments:' : 'Total Garments (Pieces):'}</span>
                   <span className="font-bold text-neutral-950">{totalPieces} pcs</span>
                 </div>
                 <div className="flex justify-between text-base font-black text-neutral-950 pt-2 border-t border-neutral-200">
@@ -242,7 +258,9 @@ export default function BulkPoDrawer({
               </div>
 
               <p className="text-[10px] text-neutral-500 italic">
-                * GST (5% / 12%) and freight carrier charges will be detailed on the official proforma invoice.
+                {isVercel
+                  ? '* Free delivery confirmation and payment link provided on WhatsApp.'
+                  : '* GST (5% / 12%) and freight carrier charges will be detailed on the official proforma invoice.'}
               </p>
 
               {/* Master WhatsApp Action */}
@@ -253,7 +271,7 @@ export default function BulkPoDrawer({
                 <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                 </svg>
-                <span>Send Purchase Order on WhatsApp</span>
+                <span>{isVercel ? 'Confirm Order on WhatsApp' : 'Send Purchase Order on WhatsApp'}</span>
               </button>
 
               {/* Utility Row */}
@@ -265,18 +283,18 @@ export default function BulkPoDrawer({
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                   </svg>
-                  <span>{copiedQuote ? 'PO Copied' : 'Copy Order Text'}</span>
+                  <span>{copiedQuote ? (isVercel ? 'Order Copied' : 'PO Copied') : (isVercel ? 'Copy Order Details' : 'Copy Order Text')}</span>
                 </button>
 
                 <button
                   onClick={() => setShowInvoicePreview(!showInvoicePreview)}
                   className="bg-white border border-neutral-300 hover:bg-neutral-100 text-neutral-800 text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
-                  title="View / Print Proforma Invoice"
+                  title={isVercel ? "View / Print Order Estimate" : "View / Print Proforma Invoice"}
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  <span>{showInvoicePreview ? 'Hide Invoice' : 'Proforma'}</span>
+                  <span>{showInvoicePreview ? 'Hide Details' : (isVercel ? 'Order Estimate' : 'Proforma')}</span>
                 </button>
 
                 <button
@@ -287,17 +305,21 @@ export default function BulkPoDrawer({
                 </button>
               </div>
 
-              {/* Printable Proforma Invoice Preview */}
+              {/* Printable Proforma / Retail Estimate Preview */}
               {showInvoicePreview && (
                 <div className="p-4 bg-white rounded-xl border border-neutral-300 text-xs space-y-3 font-sans print:fixed print:inset-0 print:z-50 print:bg-white print:p-8">
                   <div className="flex justify-between items-center border-b pb-2">
                     <div>
-                      <h5 className="font-bold text-neutral-900 uppercase">Kamakhya Trading Co</h5>
-                      <p className="text-[10px] text-neutral-500">Proforma Estimate • Mill Dispatch</p>
+                      <h5 className="font-bold text-neutral-900 uppercase">
+                        {isVercel ? 'KTC Fashion' : 'Kamakhya Trading Co'}
+                      </h5>
+                      <p className="text-[10px] text-neutral-500">
+                        {isVercel ? 'Order Summary • Direct Delivery' : 'Proforma Estimate • Mill Dispatch'}
+                      </p>
                     </div>
                     <button
                       onClick={handlePrintInvoice}
-                      className="px-2.5 py-1 bg-neutral-950 text-white rounded-md text-[10px] font-bold print:hidden flex items-center gap-1"
+                      className="px-2.5 py-1 bg-neutral-950 text-white rounded-md text-[10px] font-bold print:hidden flex items-center gap-1 cursor-pointer"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -309,7 +331,7 @@ export default function BulkPoDrawer({
                   <div className="space-y-1 text-[11px]">
                     {items.map((it, i) => (
                       <div key={i} className="flex justify-between border-b border-neutral-100 py-1">
-                        <span>{it.title} ({it.quantity} pcs @ ₹{it.price})</span>
+                        <span>{it.title} ({it.quantity} {isVercel ? 'pc(s)' : 'pcs'} @ ₹{it.price})</span>
                         <span className="font-bold">₹{(it.quantity * it.price).toLocaleString('en-IN')}</span>
                       </div>
                     ))}

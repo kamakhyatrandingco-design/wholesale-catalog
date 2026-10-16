@@ -7,12 +7,13 @@ export default function WholesaleLineSheet({
   purchaseMode = 'wholesale',
   onAddToQuote,
   onQuickView,
-  whatsappNumber = "916350626582"
+  whatsappNumber = "916350626582",
+  isVercel = false
 }) {
   // Local quantity selections for line sheet batch addition
   const [lineQuantities, setLineQuantities] = useState({});
 
-  const isWholesale = purchaseMode === 'wholesale';
+  const isWholesale = isVercel ? false : purchaseMode === 'wholesale';
 
   const handleQtyChange = (productId, delta, step) => {
     setLineQuantities((prev) => {
@@ -33,9 +34,9 @@ export default function WholesaleLineSheet({
         <svg className="w-10 h-10 text-neutral-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
-        <h3 className="text-xl font-bold text-neutral-900 mb-1">No items found for Line-Sheet</h3>
+        <h3 className="text-xl font-bold text-neutral-900 mb-1">No items found</h3>
         <p className="text-neutral-500 text-xs max-w-md mx-auto">
-          Adjust your category selection or search keywords to populate the wholesale line-sheet.
+          Adjust your category selection or search keywords to populate the collection list.
         </p>
       </div>
     );
@@ -49,19 +50,23 @@ export default function WholesaleLineSheet({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs uppercase tracking-widest font-black text-emerald-400">
-              B2B Line-Sheet Order Matrix
+              {isVercel ? "Curated Collection List View" : "B2B Line-Sheet Order Matrix"}
             </span>
             <span className="bg-neutral-800 text-neutral-300 px-2 py-0.5 rounded text-[10px] font-mono">
-              {products.length} Lots
+              {products.length} {isVercel ? "Designs" : "Lots"}
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-0.5">
-            Rapid lot quantity ordering for multi-store stockists, showrooms, and boutique buyers.
+            {isVercel
+              ? "Browse all silhouettes, compare fabric weaves, and select pieces directly for order."
+              : "Rapid lot quantity ordering for multi-store stockists, showrooms, and boutique buyers."}
           </p>
         </div>
-        <div className="text-xs text-neutral-400 font-medium">
-          Prices: <span className="text-white font-bold">{isWholesale ? 'Direct Mill Wholesale' : 'Single Sampling'}</span>
-        </div>
+        {!isVercel && (
+          <div className="text-xs text-neutral-400 font-medium">
+            Prices: <span className="text-white font-bold">{isWholesale ? 'Direct Mill Wholesale' : 'Single Sampling'}</span>
+          </div>
+        )}
       </div>
 
       {/* Responsive Table Container */}
@@ -72,7 +77,7 @@ export default function WholesaleLineSheet({
               <th className="py-3.5 px-4">Garment / SKU</th>
               <th className="py-3.5 px-4 hidden md:table-cell">Category &amp; Fabric</th>
               <th className="py-3.5 px-4 hidden lg:table-cell">Sizes Curve</th>
-              <th className="py-3.5 px-4">Price / MOQ</th>
+              <th className="py-3.5 px-4">{isVercel ? "Price" : "Price / MOQ"}</th>
               <th className="py-3.5 px-4">Order Quantity</th>
               <th className="py-3.5 px-4 text-right">Line Total</th>
               <th className="py-3.5 px-4 text-center">Action</th>
@@ -82,12 +87,14 @@ export default function WholesaleLineSheet({
             {products.map((product) => {
               const wholesalePrice = Number(product.wholesale_price || 0);
               const retailPrice = Number(product.retail_price || product.wholesale_price || 0);
-              const unitPrice = isWholesale ? wholesalePrice : retailPrice;
-              const moq = isWholesale ? (product.moq || 30) : 1;
+              const unitPrice = isVercel ? retailPrice : (isWholesale ? wholesalePrice : retailPrice);
+              const moq = isVercel ? 1 : (isWholesale ? (product.moq || 30) : 1);
               const qty = getEffectiveQty(product);
               const lineTotal = unitPrice * qty;
 
-              const productMessage = `Namaste Kamakhya Trading Co!\n\nI want to place an order from your Line-Sheet:\n\n*Product:* ${product.title}\n*SKU:* ${product.sku}\n*Price:* ₹${unitPrice}/pc\n*Order Quantity:* ${qty} pcs (Total: ₹${lineTotal.toLocaleString('en-IN')})\n\nPlease share proforma invoice and dispatch date.`;
+              const productMessage = isVercel
+                ? `Namaste KTC Fashion!\n\nI want to order this garment:\n\n*Product:* ${product.title}\n*SKU:* ${product.sku}\n*Price:* ₹${unitPrice}\n*Order Quantity:* ${qty} pcs (Total: ₹${lineTotal.toLocaleString('en-IN')})\n\nPlease confirm availability and payment details.`
+                : `Namaste Kamakhya Trading Co!\n\nI want to place an order from your Line-Sheet:\n\n*Product:* ${product.title}\n*SKU:* ${product.sku}\n*Price:* ₹${unitPrice}/pc\n*Order Quantity:* ${qty} pcs (Total: ₹${lineTotal.toLocaleString('en-IN')})\n\nPlease share proforma invoice and dispatch date.`;
               const waUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(productMessage)}`;
 
               return (
@@ -195,9 +202,9 @@ export default function WholesaleLineSheet({
                           onAddToQuote({ ...product, customQty: qty }, e);
                         }}
                         className="px-3 py-1.5 bg-neutral-950 hover:bg-neutral-800 text-white rounded-lg font-bold text-[11px] transition-all shadow-2xs active:scale-95 cursor-pointer"
-                        title="Add this lot to bulk purchase order"
+                        title={isVercel ? "Add to shopping bag" : "Add this lot to bulk purchase order"}
                       >
-                        + Add PO
+                        {isVercel ? "+ Add to Bag" : "+ Add PO"}
                       </button>
 
                       <a

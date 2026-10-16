@@ -15,6 +15,7 @@ import AiChatbot from './components/AiChatbot';
 import UserAuthModal from './components/UserAuthModal';
 import NewUserGuide from './components/NewUserGuide';
 import AboutModal from './components/AboutModal';
+import { useIsVercel } from './lib/platform';
 
 const WHATSAPP_NUMBER = "916350626582";
 
@@ -47,6 +48,8 @@ function getServerSnapshot() {
 }
 
 export default function Storefront({ products = [] }) {
+  const isVercel = useIsVercel();
+
   // 1. Core Selection and Filter State
   const [selectedColors, setSelectedColors] = useState({});
   const [selectedSizes, setSelectedSizes] = useState({});
@@ -55,6 +58,9 @@ export default function Storefront({ products = [] }) {
   const [purchaseMode, setPurchaseMode] = useState("wholesale"); // 'wholesale' | 'retail'
   const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'linesheet'
   const [sortBy, setSortBy] = useState("default");
+
+  // Effective purchase mode: On Vercel, force pure retail (wholesale concept fully removed)
+  const effectivePurchaseMode = isVercel ? 'retail' : purchaseMode;
 
   // 2. Interactive Modals State
   const [quickViewProduct, setQuickViewProduct] = useState(null);
@@ -179,9 +185,9 @@ export default function Storefront({ products = [] }) {
         activeCategory === "All Collections" || product.category === activeCategory;
 
       // Price filter based on current mode
-      const currentPrice = purchaseMode === 'wholesale'
+      const currentPrice = effectivePurchaseMode === 'wholesale'
         ? Number(product.wholesale_price || 0)
-        : Number(product.retail_price || product.wholesale_price || 0);
+        : Number(product.retail_price || product.sample_price || Math.round(Number(product.wholesale_price || 600) * 1.4));
       const matchesPrice = currentPrice <= maxPrice;
 
       // Keyword / Intent matching
@@ -197,33 +203,47 @@ export default function Storefront({ products = [] }) {
     // Sorting
     if (sortBy === "price-low") {
       filtered.sort((a, b) => {
-        const pA = purchaseMode === 'wholesale' ? (a.wholesale_price || 0) : (a.retail_price || a.wholesale_price || 0);
-        const pB = purchaseMode === 'wholesale' ? (b.wholesale_price || 0) : (b.retail_price || b.wholesale_price || 0);
+        const pA = effectivePurchaseMode === 'wholesale'
+          ? (a.wholesale_price || 0)
+          : (a.retail_price || a.sample_price || Math.round(Number(a.wholesale_price || 600) * 1.4));
+        const pB = effectivePurchaseMode === 'wholesale'
+          ? (b.wholesale_price || 0)
+          : (b.retail_price || b.sample_price || Math.round(Number(b.wholesale_price || 600) * 1.4));
         return pA - pB;
       });
     } else if (sortBy === "price-high") {
       filtered.sort((a, b) => {
-        const pA = purchaseMode === 'wholesale' ? (a.wholesale_price || 0) : (a.retail_price || a.wholesale_price || 0);
-        const pB = purchaseMode === 'wholesale' ? (b.wholesale_price || 0) : (b.retail_price || b.wholesale_price || 0);
+        const pA = effectivePurchaseMode === 'wholesale'
+          ? (a.wholesale_price || 0)
+          : (a.retail_price || a.sample_price || Math.round(Number(a.wholesale_price || 600) * 1.4));
+        const pB = effectivePurchaseMode === 'wholesale'
+          ? (b.wholesale_price || 0)
+          : (b.retail_price || b.sample_price || Math.round(Number(b.wholesale_price || 600) * 1.4));
         return pB - pA;
       });
     } else if (sortBy === "moq-low") {
-      filtered.sort((a, b) => (a.moq || 1) - (b.moq || 1));
+      if (!isVercel) {
+        filtered.sort((a, b) => (a.moq || 1) - (b.moq || 1));
+      }
     }
 
     return filtered;
-  }, [liveProducts, searchQuery, activeCategory, purchaseMode, sortBy]);
+  }, [liveProducts, searchQuery, activeCategory, effectivePurchaseMode, sortBy, isVercel]);
 
-  // 6. Bulk Quote Bag Management
+  // 6. Bag / PO Management
   const addToQuote = (product, e) => {
     if (e && e.stopPropagation) e.stopPropagation();
-    const isWholesale = purchaseMode === 'wholesale';
+    const isWholesale = effectivePurchaseMode === 'wholesale';
     const activeColorIndex = selectedColors[product.id] || 0;
     const colors = product.color_variants || [];
     const color = product.selectedColor || colors[activeColorIndex]?.color_name || 'Standard';
     const size = product.selectedSize || selectedSizes[product.id] || product.sizes?.[0] || 'Free Size';
-    const price = isWholesale ? (product.wholesale_price || 0) : (product.retail_price || product.wholesale_price || 0);
-    const moq = product.customQty || (isWholesale ? (product.moq || 30) : 1);
+    const price = isWholesale
+      ? (product.wholesale_price || 0)
+      : (product.retail_price || product.sample_price || Math.round(Number(product.wholesale_price || 600) * 1.4));
+    const moq = isVercel
+      ? (product.customQty || 1)
+      : (product.customQty || (isWholesale ? (product.moq || 30) : 1));
 
     setQuoteItems((prev) => {
       const existingIndex = prev.findIndex(
@@ -245,8 +265,8 @@ export default function Storefront({ products = [] }) {
           size,
           price,
           quantity: moq,
-          isWholesale,
-          moq: isWholesale ? (product.moq || 30) : 1,
+          isWholesale: isVercel ? false : isWholesale,
+          moq: isVercel ? 1 : (isWholesale ? (product.moq || 30) : 1),
         }
       ];
     });
@@ -258,7 +278,7 @@ export default function Storefront({ products = [] }) {
     setQuoteItems((prev) => {
       const updated = [...prev];
       const item = updated[index];
-      const step = item.isWholesale ? (item.moq || 10) : 1;
+      const step = (isVercel || !item.isWholesale) ? 1 : (item.moq || 10);
       const newQty = item.quantity + (delta * step);
       if (newQty <= 0) {
         return updated.filter((_, i) => i !== index);
@@ -293,11 +313,12 @@ export default function Storefront({ products = [] }) {
         whatsappNumber={WHATSAPP_NUMBER}
         onOpenGuide={() => setIsGuideOpen(true)}
         onOpenAuth={() => setIsAuthModalOpen(true)}
+        isVercel={isVercel}
       />
 
       {/* 2. MAIN LUXURY NAVBAR */}
       <LuxuryNavbar
-        purchaseMode={purchaseMode}
+        purchaseMode={effectivePurchaseMode}
         setPurchaseMode={setPurchaseMode}
         quoteItemCount={quoteItems.length}
         quoteTotalAmount={totalQuoteAmount}
@@ -305,6 +326,7 @@ export default function Storefront({ products = [] }) {
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenAbout={() => setIsAboutModalOpen(true)}
         onResetFilters={resetAllFilters}
+        isVercel={isVercel}
       />
 
       {/* 3. EDITORIAL HERO & LOOKBOOK SHOWCASE */}
@@ -315,6 +337,7 @@ export default function Storefront({ products = [] }) {
           setActiveCategory(cat);
           scrollToCatalog();
         }}
+        isVercel={isVercel}
       />
 
       {/* 4. CATALOG SEARCH, VOICE, CATEGORIES & VIEW SWITCHER */}
@@ -330,9 +353,10 @@ export default function Storefront({ products = [] }) {
         setViewMode={setViewMode}
         sortBy={sortBy}
         setSortBy={setSortBy}
-        purchaseMode={purchaseMode}
+        purchaseMode={effectivePurchaseMode}
         totalResults={filteredProducts.length}
         onResetFilters={resetAllFilters}
+        isVercel={isVercel}
       />
 
       {/* 5. MAIN CATALOG VIEWPORT (Grid OR Wholesale Line-Sheet) */}
@@ -349,23 +373,26 @@ export default function Storefront({ products = [] }) {
               No garments matched your search
             </h3>
             <p className="text-neutral-500 text-xs max-w-md mx-auto mb-6 leading-relaxed">
-              Try adjusting your search query, selecting another category, or reset filters to explore all factory collections.
+              {isVercel
+                ? "Try adjusting your search query or selecting another category to explore our designer collection."
+                : "Try adjusting your search query, selecting another category, or reset filters to explore all factory collections."}
             </p>
             <button
               onClick={resetAllFilters}
               className="px-6 py-3 bg-neutral-950 text-white text-xs font-bold rounded-xl hover:bg-neutral-800 transition-colors shadow-sm cursor-pointer"
             >
-              Show All Factory Lots
+              {isVercel ? "Show All Designs" : "Show All Factory Lots"}
             </button>
           </div>
         ) : viewMode === 'linesheet' ? (
-          /* B2B Matrix Line-Sheet Ordering */
+          /* B2B Matrix Line-Sheet / Retail List Ordering */
           <WholesaleLineSheet
             products={filteredProducts}
-            purchaseMode={purchaseMode}
+            purchaseMode={effectivePurchaseMode}
             onAddToQuote={addToQuote}
             onQuickView={(p) => setQuickViewProduct(p)}
             whatsappNumber={WHATSAPP_NUMBER}
+            isVercel={isVercel}
           />
         ) : (
           /* Luxury Editorial Card Grid */
@@ -374,7 +401,7 @@ export default function Storefront({ products = [] }) {
               <ProductCard
                 key={product.id}
                 product={product}
-                purchaseMode={purchaseMode}
+                purchaseMode={effectivePurchaseMode}
                 selectedColorIndex={selectedColors[product.id] || 0}
                 onSelectColor={(id, idx) => setSelectedColors({ ...selectedColors, [id]: idx })}
                 selectedSize={selectedSizes[product.id]}
@@ -386,6 +413,7 @@ export default function Storefront({ products = [] }) {
                   setIsAuthModalOpen(true);
                 }}
                 whatsappNumber={WHATSAPP_NUMBER}
+                isVercel={isVercel}
               />
             ))}
           </div>
@@ -393,12 +421,13 @@ export default function Storefront({ products = [] }) {
 
       </main>
 
-      {/* 6. STOREFRONT FOOTER WITH MILL GUARANTEE */}
+      {/* 6. STOREFRONT FOOTER WITH GUARANTEES */}
       <StorefrontFooter
         whatsappNumber={WHATSAPP_NUMBER}
         onOpenGuide={() => setIsGuideOpen(true)}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenAbout={() => setIsAboutModalOpen(true)}
+        isVercel={isVercel}
       />
 
       {/* 7. MOBILE FLOATING ACTION DOCK */}
@@ -409,11 +438,12 @@ export default function Storefront({ products = [] }) {
         onOpenAuth={() => setIsAuthModalOpen(true)}
         whatsappNumber={WHATSAPP_NUMBER}
         onScrollToCatalog={scrollToCatalog}
+        isVercel={isVercel}
       />
 
       {/* 8. DESKTOP FLOATING SHORTCUTS */}
       <div className="hidden md:flex fixed bottom-6 right-6 z-30 flex-col items-end gap-3 pointer-events-auto">
-        {/* Floating Bulk PO Review Button */}
+        {/* Floating Bag / PO Review Button */}
         {quoteItems.length > 0 && (
           <button
             onClick={() => setIsQuoteDrawerOpen(true)}
@@ -422,7 +452,7 @@ export default function Storefront({ products = [] }) {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
-            <span>Review PO ({quoteItems.length})</span>
+            <span>{isVercel ? `Review Bag (${quoteItems.length})` : `Review PO (${quoteItems.length})`}</span>
             <span className="bg-emerald-500 text-black px-2 py-0.5 rounded-md text-[10px] font-black">
               ₹{totalQuoteAmount.toLocaleString('en-IN')}
             </span>
@@ -431,11 +461,15 @@ export default function Storefront({ products = [] }) {
 
         {/* WhatsApp Direct Contact Floating Bubble */}
         <a
-          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Namaste Kamakhya Trading Co! I want to inquire about bulk wholesale catalogs and factory rates.")}`}
+          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+            isVercel
+              ? "Namaste KTC Fashion! I want to inquire about your curated retail collection."
+              : "Namaste Kamakhya Trading Co! I want to inquire about bulk wholesale catalogs and factory rates."
+          )}`}
           target="_blank"
           rel="noopener noreferrer"
           className="bg-[#25D366] hover:bg-[#1EBE5A] text-white p-3.5 rounded-2xl shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center border border-white/20"
-          aria-label="Direct WhatsApp Contact"
+          aria-label={isVercel ? "Direct WhatsApp Concierge" : "Direct WhatsApp Contact"}
         >
           <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
@@ -443,7 +477,7 @@ export default function Storefront({ products = [] }) {
         </a>
       </div>
 
-      {/* 9. BULK PURCHASE ORDER SLIDE-OVER DRAWER */}
+      {/* 9. BULK PURCHASE ORDER / SHOPPING BAG SLIDE-OVER DRAWER */}
       <BulkPoDrawer
         isOpen={isQuoteDrawerOpen}
         onClose={() => setIsQuoteDrawerOpen(false)}
@@ -452,15 +486,17 @@ export default function Storefront({ products = [] }) {
         onRemoveItem={removeQuoteItem}
         onClearItems={() => setQuoteItems([])}
         whatsappNumber={WHATSAPP_NUMBER}
+        isVercel={isVercel}
       />
 
       {/* 10. PRODUCT QUICK VIEW MODAL */}
       <ProductQuickView
         product={quickViewProduct}
         onClose={() => setQuickViewProduct(null)}
-        purchaseMode={purchaseMode}
+        purchaseMode={effectivePurchaseMode}
         onAddToQuote={addToQuote}
         whatsappNumber={WHATSAPP_NUMBER}
+        isVercel={isVercel}
       />
 
       {/* 11. BUYER AUTH & RESTOCK REQUEST MODAL */}
@@ -471,22 +507,24 @@ export default function Storefront({ products = [] }) {
         initialRestockProduct={restockProduct}
       />
 
-      {/* 12. FIRST-TIME BUYER ONBOARDING GUIDE */}
+      {/* 12. ONBOARDING & SHOPPING GUIDE */}
       <NewUserGuide
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}
+        isVercel={isVercel}
       />
 
-      {/* 13. ABOUT KAMAKHYA & MULTI-CLOUD DEPLOYMENTS MODAL */}
+      {/* 13. ABOUT MODAL */}
       <AboutModal
         isOpen={isAboutModalOpen}
         onClose={() => setIsAboutModalOpen(false)}
       />
 
-      {/* 14. WHOLESALE DESK ASSISTANT */}
+      {/* 14. CHATBOT ASSISTANT */}
       <AiChatbot
         products={liveProducts}
         onOpenRestock={() => setIsAuthModalOpen(true)}
+        isVercel={isVercel}
       />
 
     </div>

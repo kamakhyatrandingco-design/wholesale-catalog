@@ -10,13 +10,14 @@ export default function ProductCard({
   onQuickView,
   onAddToQuote,
   onRestockRequest,
-  whatsappNumber = "916350626582"
+  whatsappNumber = "916350626582",
+  isVercel = false
 }) {
-  const isWholesale = purchaseMode === 'wholesale';
+  const isWholesale = isVercel ? false : purchaseMode === 'wholesale';
   const wholesalePrice = Number(product.wholesale_price || 0);
   const retailPrice = Number(product.retail_price || product.wholesale_price || 0);
-  const displayPrice = isWholesale ? wholesalePrice : retailPrice;
-  const displayMoq = isWholesale ? (product.moq || 30) : 1;
+  const displayPrice = isVercel ? retailPrice : (isWholesale ? wholesalePrice : retailPrice);
+  const displayMoq = isVercel ? 1 : (isWholesale ? (product.moq || 30) : 1);
 
   // Margin economics for retail buyers
   const marginAmount = retailPrice > wholesalePrice ? (retailPrice - wholesalePrice) : 0;
@@ -32,7 +33,9 @@ export default function ProductCard({
   const currentImageSrc = variant?.image || product.image || "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800";
 
   // WhatsApp 1-tap direct inquiry message
-  const productMessage = `Namaste Kamakhya Trading Co!\n\nI want to place an order from your catalog:\n\n*Product:* ${product.title} (${isWholesale ? 'Wholesale Lot' : 'Retail Sample Piece'})\n*SKU:* ${product.sku}\n*Color:* ${activeColor ? activeColor.color_name : 'Default'}\n*Size:* ${activeSize}\n*Price:* ₹${displayPrice}/pc\n*Order Quantity:* ${displayMoq} pcs\n\nPlease confirm ready stock availability and dispatch timeline.`;
+  const productMessage = isVercel
+    ? `Namaste KTC Fashion!\n\nI want to order this garment:\n\n*Product:* ${product.title}\n*SKU:* ${product.sku}\n*Color:* ${activeColor ? activeColor.color_name : 'Default'}\n*Size:* ${activeSize}\n*Price:* ₹${retailPrice}\n*Quantity:* 1 pc\n\nPlease confirm availability and payment details.`
+    : `Namaste Kamakhya Trading Co!\n\nI want to place an order from your catalog:\n\n*Product:* ${product.title} (${isWholesale ? 'Wholesale Lot' : 'Retail Sample Piece'})\n*SKU:* ${product.sku}\n*Color:* ${activeColor ? activeColor.color_name : 'Default'}\n*Size:* ${activeSize}\n*Price:* ₹${displayPrice}/pc\n*Order Quantity:* ${displayMoq} pcs\n\nPlease confirm ready stock availability and dispatch timeline.`;
   const productWaUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(productMessage)}`;
 
   return (
@@ -43,10 +46,10 @@ export default function ProductCard({
         className="relative aspect-[4/5] bg-neutral-100 overflow-hidden cursor-pointer select-none"
         onClick={() => onQuickView(product)}
       >
-        {/* Top Badges (MOQ + Mode) */}
+        {/* Top Badges */}
         <div className="absolute top-3 left-3 z-20 flex flex-col gap-1 items-start">
           <span className="bg-neutral-950/90 text-white backdrop-blur-xs px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md shadow-xs">
-            {isWholesale ? `MOQ: ${displayMoq} pcs` : 'Sample Piece'}
+            {isVercel ? 'Ready to Dispatch' : (isWholesale ? `MOQ: ${displayMoq} pcs` : 'Sample Piece')}
           </span>
         </div>
 
@@ -139,9 +142,9 @@ export default function ProductCard({
               <span className="text-xl sm:text-2xl font-black text-neutral-950">
                 ₹{displayPrice.toLocaleString('en-IN')}
               </span>
-              <span className="text-xs text-neutral-500 ml-1 font-semibold">/ pc</span>
+              {!isVercel && <span className="text-xs text-neutral-500 ml-1 font-semibold">/ pc</span>}
             </div>
-            {isWholesale && retailPrice > wholesalePrice && (
+            {!isVercel && isWholesale && retailPrice > wholesalePrice && (
               <div className="text-right">
                 <span className="text-xs text-neutral-400 line-through">
                   ₹{retailPrice.toLocaleString('en-IN')}
@@ -154,7 +157,7 @@ export default function ProductCard({
           </div>
         </div>
 
-        {/* Action CTAs: WhatsApp Order and Add to Bulk PO */}
+        {/* Action CTAs: WhatsApp Order and Add to Bag */}
         <div className="flex flex-col gap-2">
           <a
             href={productWaUrl}
@@ -173,7 +176,7 @@ export default function ProductCard({
             className="w-full bg-neutral-100 hover:bg-neutral-950 hover:text-white text-neutral-800 font-bold py-2 px-3 rounded-xl transition-all duration-200 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <span>+</span>
-            <span>Add to Bulk PO</span>
+            <span>{isVercel ? 'Add to Bag' : 'Add to Bulk PO'}</span>
           </button>
 
           <button
@@ -183,7 +186,7 @@ export default function ProductCard({
             }}
             className="text-[10px] sm:text-[11px] font-semibold text-neutral-500 hover:text-black transition-colors underline pt-1 text-center cursor-pointer"
           >
-            Request Restock / Custom Lot
+            {isVercel ? 'Check Custom Size / Restock' : 'Request Restock / Custom Lot'}
           </button>
 
         </div>

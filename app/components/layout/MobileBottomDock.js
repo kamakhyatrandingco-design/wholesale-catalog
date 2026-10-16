@@ -6,7 +6,8 @@ export default function MobileBottomDock({
   onOpenCart,
   onOpenAuth,
   whatsappNumber = "916350626582",
-  onScrollToCatalog
+  onScrollToCatalog,
+  isVercel = false
 }) {
   return (
     <aside
@@ -26,7 +27,7 @@ export default function MobileBottomDock({
           <span>Catalog</span>
         </button>
 
-        {/* Buyer Portal */}
+        {/* Account / Buyer Portal */}
         <button
           onClick={onOpenAuth}
           className="flex flex-col items-center justify-center p-1.5 rounded-lg text-neutral-700 hover:text-black transition-colors flex-1"
@@ -34,12 +35,16 @@ export default function MobileBottomDock({
           <svg className="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
           </svg>
-          <span>Portal</span>
+          <span>{isVercel ? "Account" : "Portal"}</span>
         </button>
 
         {/* WhatsApp Chat */}
         <a
-          href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Namaste Kamakhya Trading Co! I want to inquire about bulk wholesale catalogs and factory rates.")}`}
+          href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+            isVercel
+              ? "Namaste KTC Fashion! I want to inquire about your designer apparel collection."
+              : "Namaste Kamakhya Trading Co! I want to inquire about bulk wholesale catalogs and factory rates."
+          )}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex flex-col items-center justify-center p-1.5 rounded-lg text-emerald-600 hover:text-emerald-700 transition-colors flex-1"
@@ -50,7 +55,7 @@ export default function MobileBottomDock({
           <span>Chat</span>
         </a>
 
-        {/* Bulk PO Drawer (Highlighted Action) */}
+        {/* Bag / Bulk PO Drawer Trigger */}
         <button
           onClick={onOpenCart}
           className="relative flex flex-col items-center justify-center p-1.5 px-3 rounded-xl bg-neutral-950 text-white font-bold flex-1 shadow-sm active:scale-95"
@@ -65,7 +70,7 @@ export default function MobileBottomDock({
               </span>
             )}
           </div>
-          <span className="text-[9px] mt-0.5">Bulk PO</span>
+          <span className="text-[9px] mt-0.5">{isVercel ? "Bag" : "Bulk PO"}</span>
         </button>
 
       </div>

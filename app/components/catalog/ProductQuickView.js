@@ -7,18 +7,19 @@ export default function ProductQuickView({
   onClose,
   purchaseMode = 'wholesale',
   onAddToQuote,
-  whatsappNumber = "916350626582"
+  whatsappNumber = "916350626582",
+  isVercel = false
 }) {
   const [selectedColorIdx, setSelectedColorIdx] = useState(0);
   const [selectedSize, setSelectedSize] = useState(product?.sizes?.[0] || 'Free Size');
 
   if (!product) return null;
 
-  const isWholesale = purchaseMode === 'wholesale';
+  const isWholesale = isVercel ? false : purchaseMode === 'wholesale';
   const wholesalePrice = Number(product.wholesale_price || 0);
   const retailPrice = Number(product.retail_price || product.wholesale_price || 0);
-  const displayPrice = isWholesale ? wholesalePrice : retailPrice;
-  const displayMoq = isWholesale ? (product.moq || 30) : 1;
+  const displayPrice = isVercel ? retailPrice : (isWholesale ? wholesalePrice : retailPrice);
+  const displayMoq = isVercel ? 1 : (isWholesale ? (product.moq || 30) : 1);
 
   const colors = product.color_variants || [];
   const activeColor = colors[selectedColorIdx];
@@ -26,7 +27,9 @@ export default function ProductQuickView({
   // Image Source (Real Garment Photography)
   const imageSrc = activeColor?.image || product.image || "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800";
 
-  const waMessage = `Namaste Kamakhya Trading Co!\n\nI want to order from your catalog:\n*Product:* ${product.title}\n*SKU:* ${product.sku}\n*Color:* ${activeColor ? activeColor.color_name : 'Default'}\n*Size:* ${selectedSize}\n*Price:* ₹${displayPrice}/pc\n*Order Quantity:* ${displayMoq} pcs\n\nPlease share dispatch timeline and bank payment details.`;
+  const waMessage = isVercel
+    ? `Namaste KTC Fashion!\n\nI want to order from your collection:\n*Product:* ${product.title}\n*SKU:* ${product.sku}\n*Color:* ${activeColor ? activeColor.color_name : 'Default'}\n*Size:* ${selectedSize}\n*Price:* ₹${retailPrice}\n*Order Quantity:* 1 pc\n\nPlease confirm availability and payment details.`
+    : `Namaste Kamakhya Trading Co!\n\nI want to order from your catalog:\n*Product:* ${product.title}\n*SKU:* ${product.sku}\n*Color:* ${activeColor ? activeColor.color_name : 'Default'}\n*Size:* ${selectedSize}\n*Price:* ₹${displayPrice}/pc\n*Order Quantity:* ${displayMoq} pcs\n\nPlease share dispatch timeline and bank payment details.`;
   const waUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(waMessage)}`;
 
   return (
@@ -84,9 +87,9 @@ export default function ProductQuickView({
                   <span className="text-3xl font-black text-neutral-950">
                     ₹{displayPrice.toLocaleString('en-IN')}
                   </span>
-                  <span className="text-xs text-neutral-500 font-semibold">/ piece</span>
+                  {!isVercel && <span className="text-xs text-neutral-500 font-semibold">/ piece</span>}
                 </div>
-                {isWholesale && retailPrice > wholesalePrice && (
+                {!isVercel && isWholesale && retailPrice > wholesalePrice && (
                   <div className="text-xs text-neutral-600 font-semibold mt-0.5">
                     Suggested Retail MRP: ₹{retailPrice.toLocaleString('en-IN')}
                   </div>
@@ -142,19 +145,26 @@ export default function ProductQuickView({
                 </div>
               )}
 
-              {/* Technical Mill Specs */}
+              {/* Garment Specifications */}
               <div className="space-y-2 text-xs text-neutral-600 bg-neutral-50 p-4 rounded-xl border border-neutral-200/80">
                 <div className="flex justify-between">
-                  <span className="font-semibold text-neutral-500">Fabric &amp; Loom:</span>
-                  <span className="font-bold text-neutral-900">{product.fabric || 'Pure Mill Cotton / Silk Weave'}</span>
+                  <span className="font-semibold text-neutral-500">Fabric &amp; Weave:</span>
+                  <span className="font-bold text-neutral-900">{product.fabric || 'Pure Cotton / Silk Weave'}</span>
                 </div>
+                {!isVercel ? (
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-neutral-500">Wholesale Lot MOQ:</span>
+                    <span className="font-bold text-neutral-900">{product.moq || 30} pieces</span>
+                  </div>
+                ) : (
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-neutral-500">Minimum Order:</span>
+                    <span className="font-bold text-neutral-900">1 Piece (No Minimum)</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
-                  <span className="font-semibold text-neutral-500">Wholesale Lot MOQ:</span>
-                  <span className="font-bold text-neutral-900">{product.moq || 30} pieces</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-neutral-500">Dispatch Speed:</span>
-                  <span className="font-bold text-neutral-900">Ready In-Stock (24-48 Hours)</span>
+                  <span className="font-semibold text-neutral-500">Shipping:</span>
+                  <span className="font-bold text-neutral-900">{isVercel ? 'Pan-India Insured Delivery (2-4 Days)' : 'Ready In-Stock (24-48 Hours)'}</span>
                 </div>
                 {product.description && (
                   <p className="pt-2 border-t border-neutral-200 text-neutral-600 text-[11px] leading-relaxed">
@@ -182,7 +192,7 @@ export default function ProductQuickView({
                 }}
                 className="w-full bg-neutral-950 hover:bg-neutral-800 text-white font-bold py-3 px-4 rounded-xl text-xs transition-colors shadow-sm cursor-pointer"
               >
-                + Add Lot to Bulk Purchase Order
+                {isVercel ? '+ Add to Shopping Bag' : '+ Add Lot to Bulk Purchase Order'}
               </button>
             </div>
 
