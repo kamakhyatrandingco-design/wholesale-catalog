@@ -3,6 +3,7 @@ import path from 'path';
 import matter from 'gray-matter';
 import { NextResponse } from 'next/server';
 import { listFiles, getFile } from '@/app/lib/github';
+import { getDbProducts, isDatabaseConfigured } from '@/app/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -24,7 +25,20 @@ function getDeletedIds() {
 export async function GET() {
   const deletedSet = getDeletedIds();
 
-  // Option A: If GITHUB_TOKEN is configured, fetch live from GitHub
+  // Tier 1: Cloud Database (Supabase / Neon Postgres) - Real-time & persistent across all devices
+  if (isDatabaseConfigured()) {
+    try {
+      const dbProducts = await getDbProducts();
+      if (Array.isArray(dbProducts) && dbProducts.length > 0) {
+        const filtered = dbProducts.filter(p => !deletedSet.has(p.id) && !deletedSet.has(p.slug));
+        return NextResponse.json(filtered);
+      }
+    } catch (dbErr) {
+      console.warn('[API/products] Cloud database fetch fallback:', dbErr.message);
+    }
+  }
+
+  // Tier 2: GitHub API (if GITHUB_TOKEN is configured)
   if (process.env.GITHUB_TOKEN) {
     try {
       const files = await listFiles(PRODUCTS_DIR);
@@ -54,7 +68,7 @@ export async function GET() {
     }
   }
 
-  // Option B: Fallback to reading bundled markdown files (always works on Netlify/Vercel)
+  // Tier 3: Bundled Markdown Files (Always works on initial deployment with 1 demo product)
   try {
     const localDir = path.join(process.cwd(), 'content/products');
     if (fs.existsSync(localDir)) {

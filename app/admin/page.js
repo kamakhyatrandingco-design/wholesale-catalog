@@ -69,6 +69,7 @@ export default function MedusaAdminPortal() {
   // 3. Products Catalog State
   const [products, setProducts] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [dbStatus, setDbStatus] = useState({ configured: false, provider: 'local' });
 
   // 4. Medusa Orders State
   const [orders, setOrders] = useState([]);
@@ -195,15 +196,27 @@ export default function MedusaAdminPortal() {
     }
   }, []);
 
+  // Check Database connection status
+  const checkDbStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/db-status');
+      if (res.ok) {
+        const data = await res.json();
+        setDbStatus(data);
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated) {
       const timer = setTimeout(() => {
         fetchProducts();
         fetchOrders();
+        checkDbStatus();
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, fetchProducts, fetchOrders]);
+  }, [isAuthenticated, fetchProducts, fetchOrders, checkDbStatus]);
 
   // Handle Login
   const handleLogin = async (e) => {
@@ -685,6 +698,7 @@ export default function MedusaAdminPortal() {
             onRestoreCatalog={handleRestoreCatalog}
             onSyncModules={fetchProducts}
             isRefreshing={isLoadingProducts}
+            dbStatus={dbStatus}
           />
 
           {/* Body Content by Tab */}
@@ -767,6 +781,48 @@ export default function MedusaAdminPortal() {
                     >
                       ↺ Restore Factory Catalog Items
                     </button>
+                  </div>
+                </div>
+
+                {/* Cloud Database Integration Section */}
+                <div className="pt-6 border-t border-zinc-800 space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-white">Free Cloud Database (Supabase / Neon Postgres)</h4>
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold ${
+                        dbStatus?.configured 
+                          ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60'
+                          : 'bg-zinc-800 text-zinc-400'
+                      }`}>
+                        {dbStatus?.configured ? `● ${dbStatus.provider.toUpperCase()} ACTIVE` : '○ LOCAL STORAGE'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-400 mt-1">
+                      Enables real-time cloud catalog sync across Netlify, Vercel, and all client devices. Free forever (500MB storage, 50k requests/mo).
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-zinc-900/60 rounded-xl border border-zinc-800 space-y-3 text-xs">
+                    <div className="flex items-center justify-between text-zinc-300">
+                      <span>Status:</span>
+                      <span className="font-mono text-zinc-200">
+                        {dbStatus?.configured ? `Connected (${dbStatus.provider})` : 'Local Fallback Mode'}
+                      </span>
+                    </div>
+
+                    <div className="text-[11px] text-zinc-400 leading-relaxed space-y-1.5 pt-1 border-t border-zinc-800/60">
+                      <div className="font-semibold text-zinc-200">Quick 2-Minute Free Setup:</div>
+                      <div>1. Create a free project at <strong className="text-zinc-200">supabase.com</strong> (no credit card required).</div>
+                      <div>2. In Supabase SQL Editor, run the script provided in <code className="text-amber-300 bg-zinc-800 px-1 py-0.5 rounded">database-schema.sql</code>.</div>
+                      <div>3. In Netlify or Vercel Environment Variables, add:</div>
+                      <div className="font-mono bg-black/60 p-2 rounded text-[10px] text-emerald-300 space-y-0.5 mt-1">
+                        <div>SUPABASE_URL=https://your-project.supabase.co</div>
+                        <div>SUPABASE_KEY=your-supabase-anon-or-service-key</div>
+                      </div>
+                      <div className="text-[10px] text-zinc-500 pt-1">
+                        * Alternatively, connect any Postgres database using <code className="text-zinc-300 font-mono">DATABASE_URL="postgres://..."</code> (e.g. Neon.tech).
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

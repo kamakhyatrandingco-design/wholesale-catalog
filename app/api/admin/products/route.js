@@ -3,6 +3,7 @@ import path from 'path';
 import matter from 'gray-matter';
 import { NextResponse } from 'next/server';
 import { listFiles, getFile, putFile, deleteFile } from '@/app/lib/github';
+import { getDbProducts, saveDbProduct, deleteDbProduct, isDatabaseConfigured, getDatabaseProvider } from '@/app/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -48,8 +49,28 @@ function createSlug(title, sku) {
   return base || `product-${Date.now()}`;
 }
 
-// GET all products: tries GitHub API first, falls back to local files
+// GET all products: Cloud DB first -> GitHub API second -> Local file fallback third
 export async function GET() {
+  const deletedSet = getDeletedIds();
+
+  // Tier 1: Cloud Database (Supabase / Neon Postgres)
+  if (isDatabaseConfigured()) {
+    try {
+      const dbProducts = await getDbProducts();
+      if (Array.isArray(dbProducts) && dbProducts.length > 0) {
+        const valid = dbProducts.filter(p => !deletedSet.has(p.id) && !deletedSet.has(p.slug));
+        return NextResponse.json({
+          success: true,
+          provider: getDatabaseProvider(),
+          products: valid
+        });
+      }
+    } catch (dbErr) {
+      console.warn("[Admin API] Cloud database fetch error:", dbErr.message);
+    }
+  }
+
+  // Tier 2: GitHub API
   if (process.env.GITHUB_TOKEN) {
     try {
       const files = await listFiles(PRODUCTS_DIR);
@@ -71,20 +92,22 @@ export async function GET() {
         })
       );
 
-      const deletedSet = getDeletedIds();
       const validProducts = products.filter(Boolean).filter(p => !deletedSet.has(p.id) && !deletedSet.has(p.slug));
       if (validProducts.length > 0) {
-        return NextResponse.json({ success: true, products: validProducts });
+        return NextResponse.json({
+          success: true,
+          provider: 'github',
+          products: validProducts
+        });
       }
     } catch (err) {
       console.warn("GitHub admin products fetch failed, using local fallback:", err.message);
     }
   }
 
-  // Local fallback (works on dev and read-only serverless bundles)
+  // Tier 3: Local fallback (works on dev and read-only serverless bundles with 1 demo product)
   try {
     if (fs.existsSync(LOCAL_PRODUCTS_DIR)) {
-      const deletedSet = getDeletedIds();
       const files = fs.readdirSync(LOCAL_PRODUCTS_DIR);
       const products = files
         .filter((f) => f.endsWith('.md'))
@@ -101,9 +124,13 @@ export async function GET() {
         })
         .filter(p => !deletedSet.has(p.id) && !deletedSet.has(p.slug));
 
-      return NextResponse.json({ success: true, products });
+      return NextResponse.json({
+        success: true,
+        provider: 'local',
+        products
+      });
     }
-    return NextResponse.json({ success: true, products: [] });
+    return NextResponse.json({ success: true, provider: 'local', products: [] });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message },
@@ -165,20 +192,32 @@ export async function DELETE(req) {
     // 1. Record in persistent deleted registry
     recordDeletedId(id);
 
-    // 2. Try GitHub API if configured
+    // 2. Delete from Cloud Database (Supabase / Neon Postgres)
+    let dbDeleted = false;
+    if (isDatabaseConfigured()) {
+      try {
+        dbDeleted = await deleteDbProduct(id);
+      } catch (dbErr) {
+        console.warn("[Admin API] DB delete error:", dbErr.message);
+      }
+    }
+
+    // 3. Try GitHub API if configured
+    let gitDeleted = false;
     if (process.env.GITHUB_TOKEN) {
       try {
         const filePath = `${PRODUCTS_DIR}/${id}.md`;
         const existing = await getFile(filePath);
         if (existing) {
           await deleteFile(filePath, existing.sha, `delete: remove product ${id} from catalog`);
+          gitDeleted = true;
         }
       } catch (err) {
         console.warn("GitHub delete failed:", err.message);
       }
     }
 
-    // 3. Local file deletion fallback
+    // 4. Local file deletion fallback
     try {
       const localFilePath = path.join(LOCAL_PRODUCTS_DIR, `${id}.md`);
       if (fs.existsSync(localFilePath)) {
@@ -191,6 +230,8 @@ export async function DELETE(req) {
     return NextResponse.json({
       success: true,
       deletedId: id,
+      dbDeleted,
+      gitDeleted,
       message: `Product '${id}' removed permanently from catalog.`
     });
   } catch (error) {
@@ -205,6 +246,7 @@ async function handleSave(slug, product) {
   // If product was previously deleted, unblock it
   removeDeletedId(slug);
   if (product.id) removeDeletedId(product.id);
+
   const frontMatter = {
     title: product.title || 'Untitled Apparel',
     sku: product.sku || `KTC-${Date.now().toString().slice(-6)}`,
@@ -212,23 +254,44 @@ async function handleSave(slug, product) {
     fabric: product.fabric || 'Cotton Blend',
     retail_price: Number(product.retail_price) || 0,
     wholesale_price: Number(product.wholesale_price) || 0,
-    moq: Number(product.moq) || 30,
+    moq: Number(product.moq) || 1,
     sizes:
       Array.isArray(product.sizes) && product.sizes.length
         ? product.sizes
         : ['Free Size'],
     image:
       product.image ||
-      'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=900',
+    ai_model_image: product.ai_model_image || product.image || '',
     description: product.description || '',
+    stock: product.stock !== undefined ? Number(product.stock) : 120,
     color_variants: Array.isArray(product.color_variants)
       ? product.color_variants
       : [],
   };
 
-  const fileContent = matter.stringify(product.description || '', frontMatter);
+  const productObject = { id: slug, slug, ...frontMatter };
 
-  // Method 1: If GITHUB_TOKEN is available, commit to GitHub
+  // Tier 1: Cloud Database (Supabase / Neon Postgres)
+  let savedToDb = false;
+  if (isDatabaseConfigured()) {
+    try {
+      const saved = await saveDbProduct(productObject);
+      savedToDb = true;
+      return NextResponse.json({
+        success: true,
+        savedToDb: true,
+        provider: getDatabaseProvider(),
+        message: 'Product saved successfully to Cloud Database!',
+        product: saved || productObject
+      });
+    } catch (dbErr) {
+      console.warn("[Admin API] Database save failed, attempting fallbacks:", dbErr.message);
+    }
+  }
+
+  // Tier 2: GitHub API commit
+  const fileContent = matter.stringify(product.description || '', frontMatter);
   if (process.env.GITHUB_TOKEN) {
     try {
       const filePath = `${PRODUCTS_DIR}/${slug}.md`;
@@ -243,14 +306,14 @@ async function handleSave(slug, product) {
         success: true,
         gitSynced: true,
         message: 'Product saved and committed to GitHub repository!',
-        product: { id: slug, slug, ...frontMatter },
+        product: productObject,
       });
     } catch (err) {
       console.warn("GitHub commit failed, trying local save:", err.message);
     }
   }
 
-  // Method 2: Local filesystem write (if writable)
+  // Tier 3: Local filesystem write (if writable)
   try {
     if (!fs.existsSync(LOCAL_PRODUCTS_DIR)) {
       fs.mkdirSync(LOCAL_PRODUCTS_DIR, { recursive: true });
@@ -261,16 +324,15 @@ async function handleSave(slug, product) {
     return NextResponse.json({
       success: true,
       message: 'Product saved successfully to catalog',
-      product: { id: slug, slug, ...frontMatter },
+      product: productObject,
     });
   } catch (fsErr) {
-    // If read-only filesystem (EROFS on Netlify/Vercel) and no GITHUB_TOKEN set:
-    // We return success with clientSync: true so the product is stored in the browser catalog without crashing!
+    // If read-only filesystem (EROFS on Netlify/Vercel) and no database configured:
     return NextResponse.json({
       success: true,
       clientSync: true,
-      message: 'Product saved to active catalog! (Add GITHUB_TOKEN in Netlify to auto-commit to Git repo)',
-      product: { id: slug, slug, ...frontMatter },
+      message: 'Product saved to active browser catalog! (Tip: Connect free Supabase DB for instant cloud sync)',
+      product: productObject,
     });
   }
 }

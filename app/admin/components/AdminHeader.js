@@ -6,7 +6,8 @@ export default function AdminHeader({
   onOpenCreateDraftOrder,
   onRestoreCatalog,
   onSyncModules,
-  isRefreshing = false
+  isRefreshing = false,
+  dbStatus = { configured: false, provider: 'local' }
 }) {
   const tabTitles = {
     products: 'Products & Variants',
@@ -33,6 +34,18 @@ export default function AdminHeader({
 
       {/* 2. Actions & System Status */}
       <div className="flex items-center gap-2.5">
+        {dbStatus?.configured ? (
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-[10px] text-emerald-300 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Cloud DB: {dbStatus.provider.toUpperCase()}</span>
+          </div>
+        ) : (
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+            <span>Storage: Local Mode</span>
+          </div>
+        )}
+
         <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-[10px] text-emerald-300 font-mono">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           <span>Medusa Engine: Online</span>
