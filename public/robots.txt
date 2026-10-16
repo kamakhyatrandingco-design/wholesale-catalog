@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/admin/
+
+# Googlebot specific rules
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /api/admin/
+
+# Googlebot-Image specific rules
+User-agent: Googlebot-Image
+Allow: /
+Allow: /images/
+
+# Host and Sitemap Declarations
+Host: https://ktcfashion.netlify.app
+Sitemap: https://ktcfashion.netlify.app/sitemap.xml

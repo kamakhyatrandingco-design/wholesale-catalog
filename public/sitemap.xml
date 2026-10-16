@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Primary Storefront & Catalog Landing -->
+  <url>
+    <loc>https://ktcfashion.netlify.app/</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>KTC Fashion Premium Wholesale Apparel Collection</image:title>
+      <image:caption>Mill-direct ethnic and western apparel catalog for boutiques and retailers</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Ethnic Wear Collection -->
+  <url>
+    <loc>https://ktcfashion.netlify.app/?category=Ethnic+Wear</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Western Wear Collection -->
+  <url>
+    <loc>https://ktcfashion.netlify.app/?category=Western+Wear</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Girls Partywear Collection -->
+  <url>
+    <loc>https://ktcfashion.netlify.app/?category=Girls+Partywear</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Bridal Collection -->
+  <url>
+    <loc>https://ktcfashion.netlify.app/?category=Bridal</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Loungewear Collection -->
+  <url>
+    <loc>https://ktcfashion.netlify.app/?category=Loungewear</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>
