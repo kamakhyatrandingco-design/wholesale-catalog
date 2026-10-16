@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- Kamakhya Trading Co (KTC) - Free Serverless PostgreSQL / Supabase Schema
--- Run this script in the Supabase SQL Editor (or Neon SQL Console)
+-- Run this script in the Supabase SQL Editor
 -- ==============================================================================
 
 -- 1. Products Table (Stores all your retail and wholesale apparel)
@@ -80,23 +80,24 @@ INSERT INTO products (
         {"color_name": "Wine Maroon", "hex_code": "#581845"},
         {"color_name": "Rani Pink", "hex_code": "#E91E63"}
     ]'::jsonb
-) ON CONFLICT (id) DO NOTHING;
+) ON CONFLICT (id) DO UPDATE SET
+    title = EXCLUDED.title,
+    retail_price = EXCLUDED.retail_price,
+    wholesale_price = EXCLUDED.wholesale_price,
+    moq = EXCLUDED.moq;
 
--- Enable Row Level Security (RLS) with public read access
+-- 4. Enable Row Level Security (RLS) & Allow Clean API Access
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE inquiries ENABLE ROW LEVEL SECURITY;
 
--- Allow anyone to view products (Storefront)
-CREATE POLICY "Public products are viewable by everyone" 
-ON products FOR SELECT USING (true);
+-- Products Policies: Allow public read, and allow all authenticated/anon API operations
+DROP POLICY IF EXISTS "Public read products" ON products;
+DROP POLICY IF EXISTS "Full access products" ON products;
+CREATE POLICY "Public read products" ON products FOR SELECT USING (true);
+CREATE POLICY "Full access products" ON products FOR ALL USING (true);
 
--- Allow service role or authenticated admin to insert/update/delete products
-CREATE POLICY "Enable all access for service role" 
-ON products FOR ALL USING (true);
-
--- Allow public to submit quote inquiries
-CREATE POLICY "Public can submit inquiries" 
-ON inquiries FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Enable all inquiry access for service role" 
-ON inquiries FOR ALL USING (true);
+-- Inquiries Policies: Allow anyone to insert, and allow admin to read
+DROP POLICY IF EXISTS "Public insert inquiries" ON inquiries;
+DROP POLICY IF EXISTS "Full access inquiries" ON inquiries;
+CREATE POLICY "Public insert inquiries" ON inquiries FOR INSERT WITH CHECK (true);
+CREATE POLICY "Full access inquiries" ON inquiries FOR ALL USING (true);
