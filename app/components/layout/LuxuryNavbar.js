@@ -8,7 +8,6 @@ export default function LuxuryNavbar({
   quoteItemCount = 0,
   quoteTotalAmount = 0,
   onOpenCart,
-  onOpenCalculator,
   onOpenAuth,
   onOpenAbout,
   onResetFilters
@@ -48,25 +47,30 @@ export default function LuxuryNavbar({
               onClick={onOpenAbout}
               className="hover:text-black transition-colors cursor-pointer"
             >
-              About &amp; Cloud Hub
+              About Factory
             </button>
-            <button
-              onClick={onOpenCalculator}
-              className="hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer text-emerald-900 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/70"
+            <Link
+              href="/terms"
+              className="hover:text-black transition-colors"
             >
-              <span>📊</span>
-              <span>Boutique Margin Engine</span>
-            </button>
+              Wholesale Terms
+            </Link>
+            <Link
+              href="/privacy"
+              className="hover:text-black transition-colors"
+            >
+              Privacy Policy
+            </Link>
           </div>
 
           {/* Right Action Stack */}
           <div className="flex items-center gap-2 sm:gap-3">
             
             {/* Wholesale vs Retail Mode Toggle */}
-            <div className="bg-neutral-100 p-1 rounded-full flex items-center border border-neutral-200 shadow-inner">
+            <div className="bg-neutral-100 p-1 rounded-lg flex items-center border border-neutral-200">
               <button
                 onClick={() => setPurchaseMode('wholesale')}
-                className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
+                className={`px-3 sm:px-4 py-1.5 rounded-md text-xs font-bold transition-all duration-200 cursor-pointer ${
                   purchaseMode === 'wholesale'
                     ? 'bg-neutral-950 text-white shadow-xs'
                     : 'text-neutral-600 hover:text-black'
@@ -77,7 +81,7 @@ export default function LuxuryNavbar({
               </button>
               <button
                 onClick={() => setPurchaseMode('retail')}
-                className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
+                className={`px-3 sm:px-4 py-1.5 rounded-md text-xs font-bold transition-all duration-200 cursor-pointer ${
                   purchaseMode === 'retail'
                     ? 'bg-neutral-950 text-white shadow-xs'
                     : 'text-neutral-600 hover:text-black'
@@ -91,17 +95,19 @@ export default function LuxuryNavbar({
             {/* Buyer Portal Button */}
             <button
               onClick={onOpenAuth}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 border border-neutral-200 transition-colors cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 border border-neutral-200 transition-colors cursor-pointer"
               title="Buyer Portal & Restock Requests"
             >
-              <span>👤</span>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
               <span className="hidden md:inline">Buyer Portal</span>
             </button>
 
             {/* Bulk PO Drawer Bag Trigger */}
             <button
               onClick={onOpenCart}
-              className="relative flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white transition-all shadow-xs active:scale-95 cursor-pointer"
+              className="relative flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg bg-neutral-950 hover:bg-neutral-800 text-white transition-all shadow-xs active:scale-95 cursor-pointer"
               aria-label="Open Bulk Purchase Order Drawer"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,7 +116,7 @@ export default function LuxuryNavbar({
               <span className="hidden sm:inline">Bulk PO</span>
               
               {quoteItemCount > 0 ? (
-                <span className="px-1.5 py-0.5 text-[10px] font-black rounded-full bg-emerald-500 text-black leading-none animate-pulse">
+                <span className="px-1.5 py-0.5 text-[10px] font-black rounded-md bg-emerald-500 text-black leading-none">
                   {quoteItemCount}
                 </span>
               ) : null}
@@ -125,7 +131,7 @@ export default function LuxuryNavbar({
             {/* Admin Portal Link */}
             <Link
               href="/admin"
-              className="hidden sm:inline-flex text-xs font-bold px-3 py-2 text-neutral-500 hover:text-black border border-neutral-200 hover:border-neutral-400 rounded-xl transition-all"
+              className="hidden sm:inline-flex text-xs font-bold px-3 py-2 text-neutral-500 hover:text-black border border-neutral-200 hover:border-neutral-400 rounded-lg transition-all"
               title="Open Factory Admin Portal"
             >
               Admin

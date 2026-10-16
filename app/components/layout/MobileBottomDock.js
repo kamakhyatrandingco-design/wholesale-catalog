@@ -4,7 +4,7 @@ export default function MobileBottomDock({
   quoteItemCount = 0,
   quoteTotalAmount = 0,
   onOpenCart,
-  onOpenCalculator,
+  onOpenAuth,
   whatsappNumber = "916350626582",
   onScrollToCatalog
 }) {
@@ -26,13 +26,15 @@ export default function MobileBottomDock({
           <span>Catalog</span>
         </button>
 
-        {/* Margin Calc */}
+        {/* Buyer Portal */}
         <button
-          onClick={onOpenCalculator}
-          className="flex flex-col items-center justify-center p-1.5 rounded-lg text-emerald-700 hover:text-emerald-900 transition-colors flex-1"
+          onClick={onOpenAuth}
+          className="flex flex-col items-center justify-center p-1.5 rounded-lg text-neutral-700 hover:text-black transition-colors flex-1"
         >
-          <span className="text-base mb-0.5">📊</span>
-          <span>Margins</span>
+          <svg className="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <span>Portal</span>
         </button>
 
         {/* WhatsApp Chat */}
@@ -58,7 +60,7 @@ export default function MobileBottomDock({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
             {quoteItemCount > 0 && (
-              <span className="absolute -top-1.5 -right-2 bg-emerald-500 text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+              <span className="absolute -top-1.5 -right-2 bg-emerald-500 text-black text-[9px] font-black min-w-4 h-4 px-1 rounded-md flex items-center justify-center">
                 {quoteItemCount}
               </span>
             )}

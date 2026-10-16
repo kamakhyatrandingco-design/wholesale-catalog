@@ -7,10 +7,10 @@
  * delete product markdown files by committing them directly to the repo.
  *
  * Required env vars:
- *   GITHUB_TOKEN          – A fine-grained PAT with Contents read/write scope
- *   GITHUB_REPO_OWNER     – e.g. "kamakhyatrandingco-design"
- *   GITHUB_REPO_NAME      – e.g. "wholesale-catalog"
- *   GITHUB_BRANCH         – e.g. "main" (defaults to "main")
+ *   GITHUB_TOKEN          : A fine-grained PAT with Contents read/write scope
+ *   GITHUB_REPO_OWNER     : e.g. "kamakhyatrandingco-design"
+ *   GITHUB_REPO_NAME      : e.g. "wholesale-catalog"
+ *   GITHUB_BRANCH         : e.g. "main" (defaults to "main")
  */
 
 const GITHUB_API = 'https://api.github.com';

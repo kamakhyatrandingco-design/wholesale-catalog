@@ -31,19 +31,22 @@ export default function AboutModal({ isOpen, onClose }) {
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 hover:text-black flex items-center justify-center text-sm font-bold transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-500 hover:text-black flex items-center justify-center text-sm font-bold transition-colors cursor-pointer"
+            aria-label="Close"
           >
-            ✕
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
         {/* Story & Factory Overview */}
         <div className="space-y-3 text-xs sm:text-sm text-neutral-600 leading-relaxed">
           <p>
-            <strong>Kamakhya Trading Co (KTC)</strong> is a premier integrated apparel manufacturer delivering high-velocity ethnic wear, modern western ensembles, bridal lehengas, and girls&apos; partywear directly from factory looms to retailers across India.
+            <strong>Kamakhya Trading Co (KTC)</strong> is an integrated apparel manufacturing facility delivering festive ethnic wear, modern western ensembles, bridal lehengas, and girls&apos; partywear directly from factory looms to retailers across India.
           </p>
           <p>
-            By eliminating multiple intermediary distributor markups, KTC empowers boutique owners and independent apparel merchants to purchase genuine mill-direct inventory at competitive factory rates with guaranteed high resale profit margins (50% to 140%).
+            By eliminating intermediary distributor markups, KTC empowers boutique owners and independent apparel merchants to purchase genuine mill-direct inventory at competitive factory rates with transparent lot pricing.
           </p>
         </div>
 
@@ -51,16 +54,16 @@ export default function AboutModal({ isOpen, onClose }) {
         <div className="bg-neutral-50 rounded-2xl p-4 sm:p-5 border border-neutral-200/90 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Official Cloud Deployments (Both Platforms Active)</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>Official Deployments</span>
             </span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-200 text-neutral-700 font-semibold">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-neutral-200 text-neutral-700 font-semibold">
               Multi-Cloud
             </span>
           </div>
 
           <p className="text-xs text-neutral-500">
-            The platform is simultaneously hosted and production-ready on both <strong>Netlify</strong> and <strong>Vercel</strong>, synchronizing with the same headless catalog and Medusa 2.0 architecture:
+            The platform is simultaneously hosted and production-ready on both <strong>Netlify</strong> and <strong>Vercel</strong>, synchronizing with the same headless catalog architecture:
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
@@ -69,10 +72,9 @@ export default function AboutModal({ isOpen, onClose }) {
               <div>
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs text-neutral-950 flex items-center gap-1.5">
-                    <span className="text-[#00C7B7]">🌐</span>
                     <span>Netlify Production</span>
                   </span>
-                  <span className="text-[10px] font-mono bg-teal-50 text-teal-700 font-semibold px-2 py-0.5 rounded-full border border-teal-200">
+                  <span className="text-[10px] font-mono bg-teal-50 text-teal-700 font-semibold px-2 py-0.5 rounded-md border border-teal-200">
                     Next.js Runtime
                   </span>
                 </div>
@@ -88,7 +90,7 @@ export default function AboutModal({ isOpen, onClose }) {
                   rel="noopener noreferrer"
                   className="w-full text-center px-3 py-1.5 bg-[#00C7B7] hover:bg-[#00b0a2] text-white font-bold text-xs rounded-lg transition-colors shadow-xs"
                 >
-                  Open on Netlify ↗
+                  Open on Netlify &rarr;
                 </a>
                 <a
                   href="https://app.netlify.com/start/deploy?repository=https://github.com/kamakhyatrandingco-design/wholesale-catalog"
@@ -97,7 +99,7 @@ export default function AboutModal({ isOpen, onClose }) {
                   className="w-full text-center px-2 py-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold text-[10px] rounded-md transition-colors"
                   title="If site is not yet launched on your Netlify account, click to 1-click deploy"
                 >
-                  ⚡ 1-Click Deploy / Activate on Netlify
+                  Deploy to Netlify Account
                 </a>
               </div>
             </div>
@@ -107,10 +109,9 @@ export default function AboutModal({ isOpen, onClose }) {
               <div>
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs text-neutral-950 flex items-center gap-1.5">
-                    <span>▲</span>
                     <span>Vercel Edge</span>
                   </span>
-                  <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded-full border border-emerald-200">
+                  <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded-md border border-emerald-200">
                     Live
                   </span>
                 </div>
@@ -125,7 +126,7 @@ export default function AboutModal({ isOpen, onClose }) {
                 rel="noopener noreferrer"
                 className="w-full text-center px-3 py-1.5 bg-neutral-900 hover:bg-black text-white font-bold text-xs rounded-lg transition-colors shadow-xs"
               >
-                Open on Vercel ↗
+                Open on Vercel &rarr;
               </a>
             </div>
           </div>
@@ -134,7 +135,7 @@ export default function AboutModal({ isOpen, onClose }) {
         {/* Dispatch & Contact Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-neutral-200 text-xs text-neutral-500">
           <div>
-            📍 Surat Weaving Mills &bull; Jaipur Finishing &bull; Pan-India Dispatch
+            Surat Weaving Mills &bull; Jaipur Finishing &bull; Pan-India Dispatch
           </div>
           <div className="font-mono text-neutral-700 font-semibold">
             Trade Desk: +91 63506 26582

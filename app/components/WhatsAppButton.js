@@ -7,7 +7,7 @@ export default function WhatsAppButton({ title, sku, moq, price, size, color, is
     e.stopPropagation();
     const qty = isWholesale ? (moq || 30) : 1;
     const mode = isWholesale ? 'Wholesale Bulk Order' : 'Retail Single Piece';
-    const text = `Namaste Kamakhya Trading Co! 🙏\n\nI want to place an order:\n\n📦 *Product:* ${title || 'Apparel Item'} (${mode})\n🏷️ *SKU:* ${sku || 'N/A'}\n🎨 *Color:* ${color || 'Default'}\n📏 *Size:* ${size || 'Standard'}\n💰 *Price:* ₹${price || 0}/pc\n🔢 *Quantity:* ${qty} pcs\n\nPlease confirm availability and share bank/UPI details for billing.`;
+    const text = `Namaste Kamakhya Trading Co!\n\nI want to place an order:\n\n*Product:* ${title || 'Apparel Item'} (${mode})\n*SKU:* ${sku || 'N/A'}\n*Color:* ${color || 'Default'}\n*Size:* ${size || 'Standard'}\n*Price:* Rs ${price || 0}/pc\n*Quantity:* ${qty} pcs\n\nPlease confirm availability and share commercial invoice details.`;
     window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   };
 

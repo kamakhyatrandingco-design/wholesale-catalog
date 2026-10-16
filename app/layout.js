@@ -20,6 +20,10 @@ export const metadata = {
   metadataBase: new URL("https://ktcfashion.netlify.app"),
   title: "KTC Fashion | Premium Women's & Girls' Apparel",
   description: "Explore KTC Fashion for the latest in curated ethnic wear, western silhouettes, and festive designer apparel.",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
   keywords: [
     "KTC Fashion",
     "Kamakhya Trading Co",

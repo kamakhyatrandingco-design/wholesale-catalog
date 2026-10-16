@@ -29,8 +29,10 @@ export default function WholesaleLineSheet({
 
   if (products.length === 0) {
     return (
-      <div className="text-center py-20 bg-white rounded-3xl border border-neutral-200 p-8 shadow-xs">
-        <span className="text-4xl mb-3 block">📋</span>
+      <div className="text-center py-20 bg-white rounded-2xl border border-neutral-200 p-8 shadow-xs">
+        <svg className="w-10 h-10 text-neutral-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
         <h3 className="text-xl font-bold text-neutral-900 mb-1">No items found for Line-Sheet</h3>
         <p className="text-neutral-500 text-xs max-w-md mx-auto">
           Adjust your category selection or search keywords to populate the wholesale line-sheet.
@@ -85,7 +87,7 @@ export default function WholesaleLineSheet({
               const qty = getEffectiveQty(product);
               const lineTotal = unitPrice * qty;
 
-              const productMessage = `Namaste Kamakhya Trading Co! 🙏\n\nI want to place an order from your Line-Sheet:\n\n📦 *Product:* ${product.title}\n🏷️ *SKU:* ${product.sku}\n💰 *Price:* ₹${unitPrice}/pc\n🔢 *Order Quantity:* ${qty} pcs (Total: ₹${lineTotal.toLocaleString('en-IN')})\n\nPlease share proforma invoice and dispatch date.`;
+              const productMessage = `Namaste Kamakhya Trading Co!\n\nI want to place an order from your Line-Sheet:\n\n*Product:* ${product.title}\n*SKU:* ${product.sku}\n*Price:* ₹${unitPrice}/pc\n*Order Quantity:* ${qty} pcs (Total: ₹${lineTotal.toLocaleString('en-IN')})\n\nPlease share proforma invoice and dispatch date.`;
               const waUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(productMessage)}`;
 
               return (

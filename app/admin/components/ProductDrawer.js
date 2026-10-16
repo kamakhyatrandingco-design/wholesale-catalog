@@ -382,7 +382,10 @@ export default function ProductDrawer({
                 {/* 1. Photography Instructions */}
                 <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
                   <h3 className="font-bold text-white text-sm flex items-center gap-2">
-                    <span>📸</span>
+                    <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
                     <span>Product Photography Management</span>
                   </h3>
                   <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
@@ -402,8 +405,11 @@ export default function ProductDrawer({
                       className="hidden"
                       disabled={isUploading}
                     />
-                    <div className="w-12 h-12 rounded-full bg-amber-400/10 text-amber-300 flex items-center justify-center text-xl mb-2.5 group-hover:scale-110 group-hover:bg-amber-400/20 transition-all">
-                      📷
+                    <div className="w-12 h-12 rounded-xl bg-amber-400/10 text-amber-300 flex items-center justify-center text-xl mb-2.5 group-hover:scale-105 group-hover:bg-amber-400/20 transition-all border border-amber-400/20">
+                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <circle cx="12" cy="13" r="4" />
+                      </svg>
                     </div>
                     <span className="text-xs font-bold text-white">Take Photo with Camera</span>
                     <span className="text-[10px] text-zinc-400 mt-1">Use mobile or webcam camera</span>
@@ -418,8 +424,10 @@ export default function ProductDrawer({
                       className="hidden"
                       disabled={isUploading}
                     />
-                    <div className="w-12 h-12 rounded-full bg-blue-400/10 text-blue-300 flex items-center justify-center text-xl mb-2.5 group-hover:scale-110 group-hover:bg-blue-400/20 transition-all">
-                      📁
+                    <div className="w-12 h-12 rounded-xl bg-blue-400/10 text-blue-300 flex items-center justify-center text-xl mb-2.5 group-hover:scale-105 group-hover:bg-blue-400/20 transition-all border border-blue-400/20">
+                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      </svg>
                     </div>
                     <span className="text-xs font-bold text-white">Upload from Storage</span>
                     <span className="text-[10px] text-zinc-400 mt-1">Select JPG, PNG, WebP files</span>
@@ -429,7 +437,9 @@ export default function ProductDrawer({
                 {/* Option C: Direct Image URL / Link */}
                 <div className="bg-zinc-900/70 p-4 rounded-xl border border-zinc-800 space-y-2">
                   <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                    <span>🔗</span>
+                    <svg className="w-3.5 h-3.5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
                     <span>Or Paste Image Link (URL)</span>
                   </label>
                   <div className="flex gap-2">
@@ -494,15 +504,23 @@ export default function ProductDrawer({
                         <button
                           type="button"
                           onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
-                          className="text-xs text-red-400 hover:text-red-300 font-semibold px-2.5 py-1 rounded bg-red-400/10 hover:bg-red-400/20 transition-colors"
+                          className="text-xs text-red-400 hover:text-red-300 font-semibold px-2.5 py-1 rounded bg-red-400/10 hover:bg-red-400/20 transition-colors inline-flex items-center gap-1"
                         >
-                          ✕ Remove Photo
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          <span>Remove Photo</span>
                         </button>
                       </div>
                     </div>
                   ) : (
                     <div className="aspect-[16/9] w-full rounded-xl border-2 border-dashed border-zinc-800 bg-zinc-950/40 flex flex-col items-center justify-center text-zinc-500 text-xs">
-                      <span className="text-2xl mb-1">📷</span>
+                      <div className="w-10 h-10 mb-2 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <circle cx="12" cy="13" r="4" />
+                        </svg>
+                      </div>
                       <span className="font-semibold text-zinc-300">No Photo Selected Yet</span>
                       <span className="text-[11px] text-zinc-500 mt-0.5">Use camera, upload from storage, or paste a URL above</span>
                     </div>

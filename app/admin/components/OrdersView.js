@@ -238,11 +238,11 @@ export default function OrdersView({
                   </td>
 
                   <td className="py-3 px-4">
-                    <span className={`inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full uppercase ${
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-md uppercase ${
                       order.fulfillment_status === 'shipped' || order.fulfillment_status === 'fulfilled'
                         ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/40'
                         : order.fulfillment_status === 'partially_fulfilled'
-                        ? 'bg-purple-950/60 text-purple-300 border border-purple-800/40'
+                        ? 'bg-amber-950/60 text-amber-300 border border-amber-800/40'
                         : 'bg-zinc-800 text-zinc-400 border border-zinc-700/60'
                     }`}>
                       {order.fulfillment_status}

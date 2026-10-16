@@ -32,20 +32,20 @@ export default function CatalogControlBar({
       
       {/* 1. Natural Language Search & Voice Search Bar */}
       <div className="max-w-3xl mx-auto px-4">
-        <div className="bg-white rounded-2xl shadow-lg border border-neutral-200/90 p-2 sm:p-2.5 flex items-center gap-2 transition-all focus-within:ring-2 focus-within:ring-neutral-900/10 focus-within:border-neutral-900">
+        <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-2 sm:p-2.5 flex items-center gap-2 transition-all focus-within:ring-2 focus-within:ring-neutral-900/10 focus-within:border-neutral-900">
           
-          <span className="pl-3 pr-1 text-purple-700 font-bold text-xs flex items-center gap-1.5 flex-shrink-0">
-            <svg className="w-4 h-4 text-purple-700 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          <span className="pl-3 pr-1 text-neutral-800 font-bold text-xs flex items-center gap-1.5 flex-shrink-0">
+            <svg className="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <span className="hidden sm:inline">AI Search</span>
+            <span className="hidden sm:inline">Search</span>
           </span>
 
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search natural styles: 'Ethnic under 1000', 'Partywear', 'Kurti below 700'..."
+            placeholder="Search styles: 'Ethnic under 1000', 'Partywear', 'Kurti below 700'..."
             className="w-full px-2 py-1.5 text-xs sm:text-sm text-neutral-800 focus:outline-none placeholder-neutral-400 bg-transparent"
           />
 
@@ -53,9 +53,9 @@ export default function CatalogControlBar({
           <button
             type="button"
             onClick={onStartVoiceSearch}
-            className={`p-2 rounded-xl transition-all duration-200 flex items-center justify-center flex-shrink-0 cursor-pointer ${
+            className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center flex-shrink-0 cursor-pointer ${
               isVoiceListening
-                ? 'bg-rose-500 text-white animate-pulse ring-4 ring-rose-200'
+                ? 'bg-rose-600 text-white ring-2 ring-rose-200'
                 : 'text-neutral-400 hover:text-black hover:bg-neutral-100'
             }`}
             title={isVoiceListening ? "Listening... Speak your query" : "Voice Search (Click to speak in Hindi/English)"}
@@ -77,8 +77,8 @@ export default function CatalogControlBar({
         </div>
 
         {isVoiceListening && (
-          <div className="mt-2 text-center text-xs font-bold text-rose-600 bg-rose-50 py-1.5 px-4 rounded-full border border-rose-200 inline-block mx-auto animate-pulse">
-            🎙️ Listening... Speak style or budget (e.g. &ldquo;Ethnic under 1000&rdquo;)
+          <div className="mt-2 text-center text-xs font-bold text-rose-700 bg-rose-50 py-1.5 px-4 rounded-md border border-rose-200 inline-block mx-auto">
+            Listening... Speak style or budget (e.g. &ldquo;Ethnic under 1000&rdquo;)
           </div>
         )}
 
@@ -88,9 +88,8 @@ export default function CatalogControlBar({
             <button
               key={chip}
               onClick={() => setSearchQuery(chip)}
-              className="px-3 py-1 bg-white hover:bg-neutral-100 text-neutral-700 rounded-full border border-neutral-200/90 transition-colors shadow-2xs active:scale-95 flex items-center gap-1 font-medium text-[11px] cursor-pointer"
+              className="px-3 py-1 bg-white hover:bg-neutral-100 text-neutral-700 rounded-md border border-neutral-200 transition-colors shadow-2xs active:scale-95 flex items-center font-medium text-[11px] cursor-pointer"
             >
-              <span>✨</span>
               <span>{chip}</span>
             </button>
           ))}

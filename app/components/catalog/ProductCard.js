@@ -32,7 +32,7 @@ export default function ProductCard({
   const currentImageSrc = variant?.image || product.image || "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800";
 
   // WhatsApp 1-tap direct inquiry message
-  const productMessage = `Namaste Kamakhya Trading Co! 🙏\n\nI want to place an order from your catalog:\n\n📦 *Product:* ${product.title} (${isWholesale ? 'Wholesale Lot' : 'Retail Sample Piece'})\n🏷️ *SKU:* ${product.sku}\n🎨 *Color:* ${activeColor ? activeColor.color_name : 'Default'}\n📏 *Size:* ${activeSize}\n💰 *Price:* ₹${displayPrice}/pc\n🔢 *Order Quantity:* ${displayMoq} pcs\n\nPlease confirm ready stock availability and dispatch timeline.`;
+  const productMessage = `Namaste Kamakhya Trading Co!\n\nI want to place an order from your catalog:\n\n*Product:* ${product.title} (${isWholesale ? 'Wholesale Lot' : 'Retail Sample Piece'})\n*SKU:* ${product.sku}\n*Color:* ${activeColor ? activeColor.color_name : 'Default'}\n*Size:* ${activeSize}\n*Price:* ₹${displayPrice}/pc\n*Order Quantity:* ${displayMoq} pcs\n\nPlease confirm ready stock availability and dispatch timeline.`;
   const productWaUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(productMessage)}`;
 
   return (
@@ -48,11 +48,6 @@ export default function ProductCard({
           <span className="bg-neutral-950/90 text-white backdrop-blur-xs px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md shadow-xs">
             {isWholesale ? `MOQ: ${displayMoq} pcs` : 'Sample Piece'}
           </span>
-          {isWholesale && marginAmount > 0 && (
-            <span className="bg-emerald-600 text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md shadow-xs">
-              Save {marginPercent}% Bulk
-            </span>
-          )}
         </div>
 
         {/* Product Image */}
@@ -64,7 +59,7 @@ export default function ProductCard({
 
         {/* Quick View Hover Cue */}
         <div className="absolute inset-0 bg-neutral-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 pointer-events-none">
-          <span className="bg-white/95 text-neutral-950 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+          <span className="bg-white/95 text-neutral-950 text-xs font-bold px-3 py-1.5 rounded-md shadow-md">
             Quick View
           </span>
         </div>
@@ -157,16 +152,9 @@ export default function ProductCard({
               </div>
             )}
           </div>
-
-          {isWholesale && marginAmount > 0 && (
-            <div className="mt-1 text-[10px] sm:text-[11px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded font-medium flex items-center justify-between">
-              <span>Boutique Margin:</span>
-              <span className="font-bold">+₹{marginAmount}/pc ({marginPercent}%)</span>
-            </div>
-          )}
         </div>
 
-        {/* Action CTAs: AI Try-On, WhatsApp Order, and Add to Bulk PO */}
+        {/* Action CTAs: WhatsApp Order and Add to Bulk PO */}
         <div className="flex flex-col gap-2">
           <a
             href={productWaUrl}

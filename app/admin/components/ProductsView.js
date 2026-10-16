@@ -167,7 +167,11 @@ export default function ProductsView({
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="py-16 text-center">
-            <div className="text-3xl mb-2">📦</div>
+            <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-zinc-800/60 border border-zinc-700/60 flex items-center justify-center text-zinc-400">
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
             <div className="text-sm font-semibold text-zinc-200">No products match your current filters</div>
             <div className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
               Try adjusting your search query, or add a new wholesale catalog item directly to the live store.

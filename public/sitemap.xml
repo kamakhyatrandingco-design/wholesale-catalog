@@ -47,12 +47,20 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- Loungewear Collection -->
+  <!-- Privacy Policy -->
   <url>
-    <loc>https://ktcfashion.netlify.app/?category=Loungewear</loc>
+    <loc>https://ktcfashion.netlify.app/privacy</loc>
     <lastmod>2026-10-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Terms and Conditions -->
+  <url>
+    <loc>https://ktcfashion.netlify.app/terms</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
 
 </urlset>

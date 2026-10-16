@@ -147,7 +147,7 @@ export default function UserAuthModal({
     setRestockSuccess(true);
 
     // Direct WhatsApp message to factory owner
-    const message = `Namaste Kamakhya Trading Co! 🙏\n\nI want to place an *URGENT RESTOCK REQUEST*:\n\n📦 *Product:* ${product?.title} (${product?.sku})\n🔢 *Quantity Required:* ${restockQty} pieces\n🎨 *Preferred Color:* ${preferredColor}\n📝 *Notes:* ${notes || 'Immediate production lot needed'}\n\n👤 *Buyer Details:*\n• Name: ${buyerDisplayName}\n• Shop: ${buyerShop}\n• City: ${buyerCity}\n• WhatsApp: ${buyerPhone}\n\nPlease inform advance booking slot & estimated dispatch date!`;
+    const message = `Namaste Kamakhya Trading Co!\n\nI want to place an *URGENT RESTOCK REQUEST*:\n\n*Product:* ${product?.title} (${product?.sku})\n*Quantity Required:* ${restockQty} pieces\n*Preferred Color:* ${preferredColor}\n*Notes:* ${notes || 'Immediate production lot needed'}\n\n*Buyer Details:*\n• Name: ${buyerDisplayName}\n• Shop: ${buyerShop}\n• City: ${buyerCity}\n• WhatsApp: ${buyerPhone}\n\nPlease inform advance booking slot & estimated dispatch date.`;
 
     setTimeout(() => {
       window.open(`https://api.whatsapp.com/send?phone=${OWNER_PHONE}&text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
@@ -157,7 +157,7 @@ export default function UserAuthModal({
 
   // Quick Direct Contact Messages
   const handleQuickContact = (templateType) => {
-    let msg = `Namaste Kamakhya Trading Co! 🙏\n\n`;
+    let msg = `Namaste Kamakhya Trading Co!\n\n`;
     const buyerInfo = currentUser ? `I am ${currentUser.name} from ${currentUser.shop}, ${currentUser.city}.\n\n` : '';
 
     if (templateType === 'custom') {
@@ -179,13 +179,15 @@ export default function UserAuthModal({
       <div className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity" onClick={onClose} />
 
       {/* Modal Dialog */}
-      <div className="relative bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl z-10 overflow-hidden border border-gray-200">
+      <div className="relative bg-white rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl z-10 overflow-hidden border border-gray-200">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-neutral-900 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-              👤
+            <div className="w-10 h-10 rounded-xl bg-neutral-900 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+              <svg className="w-5 h-5 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -193,8 +195,8 @@ export default function UserAuthModal({
                   Boutique Buyer Portal
                 </h2>
                 {currentUser && (
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                    ✓ Verified Buyer
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                    Verified Buyer
                   </span>
                 )}
               </div>
@@ -205,9 +207,12 @@ export default function UserAuthModal({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm"
+            className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm cursor-pointer"
+            aria-label="Close"
           >
-            ✕
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -215,33 +220,33 @@ export default function UserAuthModal({
         <div className="flex border-b border-gray-200 mb-6 text-xs font-bold">
           <button
             onClick={() => setActiveTab('restock')}
-            className={`flex-1 pb-3 text-center transition-all ${
+            className={`flex-1 pb-3 text-center transition-all cursor-pointer ${
               activeTab === 'restock'
                 ? 'border-b-2 border-black text-black font-black'
                 : 'text-gray-400 hover:text-black'
             }`}
           >
-            📦 Request Restock
+            Request Restock
           </button>
           <button
             onClick={() => setActiveTab('contact')}
-            className={`flex-1 pb-3 text-center transition-all ${
+            className={`flex-1 pb-3 text-center transition-all cursor-pointer ${
               activeTab === 'contact'
                 ? 'border-b-2 border-black text-black font-black'
                 : 'text-gray-400 hover:text-black'
             }`}
           >
-            📞 Contact Owner
+            Contact Mill Desk
           </button>
           <button
             onClick={() => setActiveTab('login')}
-            className={`flex-1 pb-3 text-center transition-all ${
+            className={`flex-1 pb-3 text-center transition-all cursor-pointer ${
               activeTab === 'login'
                 ? 'border-b-2 border-black text-black font-black'
                 : 'text-gray-400 hover:text-black'
             }`}
           >
-            {currentUser ? '⚙️ Profile' : '🔑 Sign In'}
+            {currentUser ? 'Profile' : 'Sign In'}
           </button>
         </div>
 
@@ -310,7 +315,14 @@ export default function UserAuthModal({
 
             {!currentUser && (
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center justify-between">
-                <span>💡 Tip: Sign in so the factory recognizes your boutique order history.</span>
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
+                  </svg>
+                  <span>Tip: Sign in so the factory recognizes your boutique order history.</span>
+                </span>
                 <button
                   type="button"
                   onClick={() => setActiveTab('login')}
@@ -323,16 +335,18 @@ export default function UserAuthModal({
 
             {restockSuccess && (
               <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl font-bold flex items-center gap-2">
-                <span>✓</span>
+                <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/></svg>
                 <span>Restock request logged! Launching WhatsApp dispatch message...</span>
               </div>
             )}
 
             <button
               type="submit"
-              className="w-full py-3.5 px-4 bg-[#25D366] hover:bg-[#1EBE5A] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 bg-[#25D366] hover:bg-[#1EBE5A] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>📲</span>
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+              </svg>
               <span>Send Urgent Restock Request to Factory WhatsApp</span>
             </button>
           </form>
@@ -341,9 +355,9 @@ export default function UserAuthModal({
         {/* TAB 2: CONTACT FACTORY OWNER */}
         {activeTab === 'contact' && (
           <div className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 text-xs space-y-2">
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-2">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-gray-800">Factory Owner Hotline:</span>
+                <span className="font-bold text-gray-800">Factory Trade Desk:</span>
                 <span className="font-black text-emerald-600 font-mono text-sm">+91 63506 26582</span>
               </div>
               <p className="text-gray-500 text-[11px]">
@@ -356,34 +370,34 @@ export default function UserAuthModal({
               
               <button
                 onClick={() => handleQuickContact('custom')}
-                className="w-full p-3 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 text-left text-xs font-bold text-gray-800 flex items-center justify-between transition-colors shadow-xs"
+                className="w-full p-3 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 text-left text-xs font-bold text-gray-800 flex items-center justify-between transition-colors shadow-xs cursor-pointer"
               >
-                <span>🧵 Custom Batch Production & Tailoring</span>
-                <span className="text-emerald-600">WhatsApp →</span>
+                <span>Custom Batch Production &amp; Tailoring</span>
+                <span className="text-emerald-600">WhatsApp &rarr;</span>
               </button>
 
               <button
                 onClick={() => handleQuickContact('transport')}
-                className="w-full p-3 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 text-left text-xs font-bold text-gray-800 flex items-center justify-between transition-colors shadow-xs"
+                className="w-full p-3 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 text-left text-xs font-bold text-gray-800 flex items-center justify-between transition-colors shadow-xs cursor-pointer"
               >
-                <span>🚚 Transport Freight Rates & Door Delivery</span>
-                <span className="text-emerald-600">WhatsApp →</span>
+                <span>Transport Freight Rates &amp; Door Delivery</span>
+                <span className="text-emerald-600">WhatsApp &rarr;</span>
               </button>
 
               <button
                 onClick={() => handleQuickContact('discount')}
-                className="w-full p-3 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 text-left text-xs font-bold text-gray-800 flex items-center justify-between transition-colors shadow-xs"
+                className="w-full p-3 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 text-left text-xs font-bold text-gray-800 flex items-center justify-between transition-colors shadow-xs cursor-pointer"
               >
-                <span>💰 Mega Lot Discount (200+ Pieces)</span>
-                <span className="text-emerald-600">WhatsApp →</span>
+                <span>Volume Lot Inquiry (200+ Pieces)</span>
+                <span className="text-emerald-600">WhatsApp &rarr;</span>
               </button>
 
               <button
                 onClick={() => handleQuickContact('catalog')}
-                className="w-full p-3 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 text-left text-xs font-bold text-gray-800 flex items-center justify-between transition-colors shadow-xs"
+                className="w-full p-3 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 text-left text-xs font-bold text-gray-800 flex items-center justify-between transition-colors shadow-xs cursor-pointer"
               >
-                <span>📚 Request Fabric Swatches & Physical Catalog</span>
-                <span className="text-emerald-600">WhatsApp →</span>
+                <span>Fabric Swatches &amp; Wholesale Inquiries</span>
+                <span className="text-emerald-600">WhatsApp &rarr;</span>
               </button>
             </div>
           </div>

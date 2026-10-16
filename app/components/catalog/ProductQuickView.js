@@ -26,7 +26,7 @@ export default function ProductQuickView({
   // Image Source (Real Garment Photography)
   const imageSrc = activeColor?.image || product.image || "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800";
 
-  const waMessage = `Namaste Kamakhya Trading Co! 🙏\n\nI want to order from your catalog:\n📦 *Product:* ${product.title}\n🏷️ *SKU:* ${product.sku}\n🎨 *Color:* ${activeColor ? activeColor.color_name : 'Default'}\n📏 *Size:* ${selectedSize}\n💰 *Price:* ₹${displayPrice}/pc\n🔢 *Order Quantity:* ${displayMoq} pcs\n\nPlease share dispatch timeline and bank payment details.`;
+  const waMessage = `Namaste Kamakhya Trading Co!\n\nI want to order from your catalog:\n*Product:* ${product.title}\n*SKU:* ${product.sku}\n*Color:* ${activeColor ? activeColor.color_name : 'Default'}\n*Size:* ${selectedSize}\n*Price:* ₹${displayPrice}/pc\n*Order Quantity:* ${displayMoq} pcs\n\nPlease share dispatch timeline and bank payment details.`;
   const waUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(waMessage)}`;
 
   return (
@@ -38,21 +38,23 @@ export default function ProductQuickView({
       />
 
       {/* Modal Dialog Card */}
-      <div className="relative bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl z-10 overflow-hidden border border-neutral-200 animate-fade-in">
+      <div className="relative bg-white rounded-2xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl z-10 overflow-hidden border border-neutral-200 animate-fade-in">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-neutral-400 hover:text-black font-bold text-lg p-2 rounded-full hover:bg-neutral-100 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 text-neutral-400 hover:text-black font-bold p-2 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer"
           aria-label="Close Quick View"
         >
-          ✕
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 items-start">
           
-          {/* Image & AI View Toggle */}
-          <div className="relative aspect-[4/5] bg-neutral-100 rounded-2xl overflow-hidden border border-neutral-200">
+          {/* Garment Photography View */}
+          <div className="relative aspect-[4/5] bg-neutral-100 rounded-xl overflow-hidden border border-neutral-200">
             <img
               src={imageSrc}
               alt={product.title}
@@ -64,7 +66,7 @@ export default function ProductQuickView({
           <div className="flex flex-col justify-between h-full space-y-5">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-purple-800 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-200">
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-800 bg-neutral-100 px-2.5 py-1 rounded-md border border-neutral-300">
                   {product.category}
                 </span>
                 <span className="text-xs text-neutral-400 font-mono">
@@ -85,8 +87,8 @@ export default function ProductQuickView({
                   <span className="text-xs text-neutral-500 font-semibold">/ piece</span>
                 </div>
                 {isWholesale && retailPrice > wholesalePrice && (
-                  <div className="text-xs text-emerald-700 font-semibold mt-0.5">
-                    Suggested Retail MRP: ₹{retailPrice.toLocaleString('en-IN')} (High boutique resale margin)
+                  <div className="text-xs text-neutral-600 font-semibold mt-0.5">
+                    Suggested Retail MRP: ₹{retailPrice.toLocaleString('en-IN')}
                   </div>
                 )}
               </div>

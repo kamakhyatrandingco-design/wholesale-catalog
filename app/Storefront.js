@@ -11,7 +11,6 @@ import ProductCard from './components/catalog/ProductCard';
 import WholesaleLineSheet from './components/catalog/WholesaleLineSheet';
 import ProductQuickView from './components/catalog/ProductQuickView';
 import BulkPoDrawer from './components/order/BulkPoDrawer';
-import BoutiqueRoiCalculator from './components/BoutiqueRoiCalculator';
 import AiChatbot from './components/AiChatbot';
 import UserAuthModal from './components/UserAuthModal';
 import NewUserGuide from './components/NewUserGuide';
@@ -61,7 +60,6 @@ export default function Storefront({ products = [] }) {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [quoteItems, setQuoteItems] = useState([]);
   const [isQuoteDrawerOpen, setIsQuoteDrawerOpen] = useState(false);
-  const [isRoiModalOpen, setIsRoiModalOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [restockProduct, setRestockProduct] = useState(null);
@@ -304,7 +302,6 @@ export default function Storefront({ products = [] }) {
         quoteItemCount={quoteItems.length}
         quoteTotalAmount={totalQuoteAmount}
         onOpenCart={() => setIsQuoteDrawerOpen(true)}
-        onOpenCalculator={() => setIsRoiModalOpen(true)}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenAbout={() => setIsAboutModalOpen(true)}
         onResetFilters={resetAllFilters}
@@ -343,12 +340,16 @@ export default function Storefront({ products = [] }) {
         
         {filteredProducts.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border border-neutral-200/90 p-8 shadow-xs">
-            <span className="text-5xl mb-3 block">👗</span>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-stone-100 border border-stone-200 flex items-center justify-center text-stone-500">
+              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+            </div>
             <h3 className="font-serif-display text-2xl font-bold text-neutral-950 mb-1">
               No garments matched your search
             </h3>
             <p className="text-neutral-500 text-xs max-w-md mx-auto mb-6 leading-relaxed">
-              Try adjusting your AI search query, selecting another category, or reset filters to explore all factory collections.
+              Try adjusting your search query, selecting another category, or reset filters to explore all factory collections.
             </p>
             <button
               onClick={resetAllFilters}
@@ -397,7 +398,6 @@ export default function Storefront({ products = [] }) {
         whatsappNumber={WHATSAPP_NUMBER}
         onOpenGuide={() => setIsGuideOpen(true)}
         onOpenAuth={() => setIsAuthModalOpen(true)}
-        onOpenCalculator={() => setIsRoiModalOpen(true)}
         onOpenAbout={() => setIsAboutModalOpen(true)}
       />
 
@@ -406,32 +406,24 @@ export default function Storefront({ products = [] }) {
         quoteItemCount={quoteItems.length}
         quoteTotalAmount={totalQuoteAmount}
         onOpenCart={() => setIsQuoteDrawerOpen(true)}
-        onOpenCalculator={() => setIsRoiModalOpen(true)}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
         whatsappNumber={WHATSAPP_NUMBER}
         onScrollToCatalog={scrollToCatalog}
       />
 
       {/* 8. DESKTOP FLOATING SHORTCUTS */}
       <div className="hidden md:flex fixed bottom-6 right-6 z-30 flex-col items-end gap-3 pointer-events-auto">
-        {/* Margin Estimator Floating Button */}
-        <button
-          onClick={() => setIsRoiModalOpen(true)}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 text-xs font-bold border border-emerald-400/50 transition-all hover:scale-105 active:scale-95 cursor-pointer"
-          title="Boutique Profit & Resale Margin Estimator"
-        >
-          <span>📊</span>
-          <span>Margin Estimator</span>
-        </button>
-
         {/* Floating Bulk PO Review Button */}
         {quoteItems.length > 0 && (
           <button
             onClick={() => setIsQuoteDrawerOpen(true)}
-            className="bg-neutral-950 hover:bg-neutral-800 text-white px-4 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-xs font-bold border border-neutral-700 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            className="bg-neutral-950 hover:bg-neutral-800 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 text-xs font-bold border border-neutral-700 transition-all hover:scale-102 active:scale-98 cursor-pointer"
           >
-            <span>📦</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
             <span>Review PO ({quoteItems.length})</span>
-            <span className="bg-emerald-500 text-black px-2 py-0.5 rounded-full text-[10px] font-black">
+            <span className="bg-emerald-500 text-black px-2 py-0.5 rounded-md text-[10px] font-black">
               ₹{totalQuoteAmount.toLocaleString('en-IN')}
             </span>
           </button>
@@ -442,7 +434,7 @@ export default function Storefront({ products = [] }) {
           href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Namaste Kamakhya Trading Co! I want to inquire about bulk wholesale catalogs and factory rates.")}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-[#25D366] hover:bg-[#1EBE5A] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 flex items-center justify-center border-2 border-white"
+          className="bg-[#25D366] hover:bg-[#1EBE5A] text-white p-3.5 rounded-2xl shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center border border-white/20"
           aria-label="Direct WhatsApp Contact"
         >
           <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
@@ -471,14 +463,7 @@ export default function Storefront({ products = [] }) {
         whatsappNumber={WHATSAPP_NUMBER}
       />
 
-      {/* 11. BOUTIQUE ROI & MARGIN CALCULATOR */}
-      <BoutiqueRoiCalculator
-        isOpen={isRoiModalOpen}
-        onClose={() => setIsRoiModalOpen(false)}
-        whatsappNumber={WHATSAPP_NUMBER}
-      />
-
-      {/* 12. BUYER AUTH & RESTOCK REQUEST MODAL */}
+      {/* 11. BUYER AUTH & RESTOCK REQUEST MODAL */}
       <UserAuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
@@ -486,21 +471,21 @@ export default function Storefront({ products = [] }) {
         initialRestockProduct={restockProduct}
       />
 
-      {/* 13. FIRST-TIME BUYER ONBOARDING GUIDE */}
+      {/* 12. FIRST-TIME BUYER ONBOARDING GUIDE */}
       <NewUserGuide
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}
       />
 
-      {/* 14. ABOUT KAMAKHYA & MULTI-CLOUD DEPLOYMENTS MODAL */}
+      {/* 13. ABOUT KAMAKHYA & MULTI-CLOUD DEPLOYMENTS MODAL */}
       <AboutModal
         isOpen={isAboutModalOpen}
         onClose={() => setIsAboutModalOpen(false)}
       />
-      {/* 15. MULTILINGUAL AI CHATBOT (Hindi / English / Voice) */}
+
+      {/* 14. WHOLESALE DESK ASSISTANT */}
       <AiChatbot
         products={liveProducts}
-        onOpenCalculator={() => setIsRoiModalOpen(true)}
         onOpenRestock={() => setIsAuthModalOpen(true)}
       />
 

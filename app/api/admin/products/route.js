@@ -48,7 +48,7 @@ function createSlug(title, sku) {
   return base || `product-${Date.now()}`;
 }
 
-// GET all products — tries GitHub API first, falls back to local files
+// GET all products: tries GitHub API first, falls back to local files
 export async function GET() {
   if (process.env.GITHUB_TOKEN) {
     try {
