@@ -197,7 +197,7 @@ async function handleRoute(req, { params }) {
         gstAmount: Math.round(subtotal * 0.05),
         volumeTier: {
           tier: totalPieces >= 100 ? 3 : totalPieces >= 50 ? 2 : 1,
-          tierTitle: totalPieces >= 100 ? 'Tier 3: Free Pan-India Freight + 3% Mill Rebate' : totalPieces >= 50 ? 'Tier 2: Free Pan-India Freight' : 'Tier 1: Standard Rates'
+          tierTitle: totalPieces >= 100 ? 'Tier 3: Free Pan-India Freight + 3% Volume Rebate' : totalPieces >= 50 ? 'Tier 2: Free Pan-India Freight' : 'Tier 1: Standard Rates'
         }
       });
     }

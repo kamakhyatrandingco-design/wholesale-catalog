@@ -3,46 +3,49 @@
 import { useSyncExternalStore } from 'react';
 
 /**
- * Determines whether the current deployment or visitor is on Vercel (Retail mode)
- * or Netlify (Wholesale B2B portal).
+ * Determines whether the current deployment or visitor is on:
+ * - Netlify (ktcfashion.netlify.app) => RETAIL ONLY (Single pieces, no MOQs, doorstep delivery)
+ * - Vercel (wholesale-catalog-ktc8.vercel.app) => WHOLESALE ONLY (B2B lots, ex-mill wholesale rates, bulk POs)
  *
- * Rules:
- * - Vercel is Pure Retail:
- *   - No wholesale lots
- *   - No MOQ requirements (buy 1 piece)
- *   - Retail prices displayed directly
- *   - Shopping bag checkout
- * - Netlify is Wholesale B2B:
- *   - Standard wholesale lots with 25-30 pc MOQs
- *   - Ex-mill rates + optional single piece sample mode
- *   - Commercial Purchase Order drawer
+ * Query Parameter Overrides (for instant testing on all devices & links):
+ * - ?mode=retail or ?platform=netlify => RETAIL
+ * - ?mode=wholesale or ?platform=vercel => WHOLESALE
  */
-export function isVercelPlatform() {
+export function getStoreMode() {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname.toLowerCase();
-    if (host.includes('vercel.app') || host.includes('vercel')) {
-      return true;
-    }
-    // Allow query parameter override for testing in any environment
     const params = new URLSearchParams(window.location.search);
-    if (params.get('platform') === 'vercel' || params.get('mode') === 'retail') {
-      return true;
+
+    // 1. Explicit query parameter override (works on all devices & links)
+    const modeParam = params.get('mode');
+    if (modeParam === 'retail') return 'retail';
+    if (modeParam === 'wholesale') return 'wholesale';
+
+    const platformParam = params.get('platform');
+    if (platformParam === 'netlify') return 'retail';
+    if (platformParam === 'vercel') return 'wholesale';
+
+    // 2. Netlify URL detection => RETAIL ONLY
+    if (host.includes('netlify.app') || host.includes('ktcfashion') || host.includes('retail')) {
+      return 'retail';
     }
-    if (params.get('platform') === 'netlify' || params.get('mode') === 'wholesale') {
-      return false;
+
+    // 3. Vercel URL detection => WHOLESALE ONLY
+    if (host.includes('vercel.app') || host.includes('wholesale')) {
+      return 'wholesale';
     }
   }
 
-  if (
-    process.env.NEXT_PUBLIC_IS_VERCEL === 'true' ||
-    process.env.NEXT_PUBLIC_VERCEL_ENV ||
-    process.env.VERCEL === '1' ||
-    process.env.NEXT_PUBLIC_STORE_MODE === 'retail'
-  ) {
-    return true;
+  // Build-time / SSR defaults
+  if (process.env.NEXT_PUBLIC_STORE_MODE === 'retail' || process.env.NETLIFY === 'true') {
+    return 'retail';
+  }
+  if (process.env.NEXT_PUBLIC_STORE_MODE === 'wholesale' || process.env.VERCEL === '1') {
+    return 'wholesale';
   }
 
-  return false;
+  // Default to wholesale for root localhost unless specified
+  return 'wholesale';
 }
 
 function subscribe(callback) {
@@ -52,18 +55,34 @@ function subscribe(callback) {
 }
 
 function getSnapshot() {
-  return isVercelPlatform();
+  return getStoreMode();
 }
 
 function getServerSnapshot() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_IS_VERCEL === 'true' ||
-    process.env.NEXT_PUBLIC_VERCEL_ENV ||
-    process.env.VERCEL === '1' ||
-    process.env.NEXT_PUBLIC_STORE_MODE === 'retail'
-  );
+  if (process.env.NEXT_PUBLIC_STORE_MODE === 'retail' || process.env.NETLIFY === 'true') {
+    return 'retail';
+  }
+  return 'wholesale';
 }
 
-export function useIsVercel() {
+export function useStoreMode() {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+// Convenience helpers
+export function useIsRetail() {
+  const mode = useStoreMode();
+  return mode === 'retail';
+}
+
+export function useIsWholesale() {
+  const mode = useStoreMode();
+  return mode === 'wholesale';
+}
+
+// Deprecated alias for backwards compatibility
+export function useIsVercel() {
+  // Backwards compat: if old code called useIsVercel expecting retail,
+  // we now return useIsRetail() so existing prop passes work cleanly as retail mode
+  return useIsRetail();
 }

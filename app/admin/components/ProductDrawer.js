@@ -270,7 +270,7 @@ export default function ProductDrawer({
                   <div className="font-semibold text-white text-xs">Warehouse Stock Distribution:</div>
                   <div className="grid grid-cols-3 gap-3 font-mono">
                     <div>
-                      <label className="text-[10px] text-zinc-400 block mb-1">Surat Mill (60%)</label>
+                      <label className="text-[10px] text-zinc-400 block mb-1">Surat Hub (60%)</label>
                       <input
                         type="number"
                         readOnly

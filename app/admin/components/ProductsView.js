@@ -89,7 +89,7 @@ export default function ProductsView({
         <div className="bg-[#0b0f17] border border-zinc-800/80 rounded-xl p-4">
           <div className="text-[11px] font-mono text-zinc-400">ESTIMATED INVENTORY</div>
           <div className="text-2xl font-bold text-white mt-1">{metrics.totalUnits.toLocaleString('en-IN')} pcs</div>
-          <div className="text-[10px] text-zinc-400 mt-1">Across 3 mill warehouses</div>
+          <div className="text-[10px] text-zinc-400 mt-1">Across sourcing warehouses</div>
         </div>
       </div>
 

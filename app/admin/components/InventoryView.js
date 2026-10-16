@@ -9,15 +9,15 @@ export default function InventoryView({
   const [selectedProductForAdjust, setSelectedProductForAdjust] = useState(null);
   const [adjustLocation, setAdjustLocation] = useState('loc_surat_central');
   const [adjustDelta, setAdjustDelta] = useState(50);
-  const [adjustReason, setAdjustReason] = useState('mill_production_batch');
+  const [adjustReason, setAdjustReason] = useState('sourcing_batch_received');
 
   const locations = [
     {
       id: 'loc_surat_central',
-      name: 'Surat Central Mill & Depot',
+      name: 'Surat Sourcing Hub & Depot',
       state: 'Gujarat',
       address: 'Ring Road Textile Market, Surat',
-      type: 'Primary Weaving Mill'
+      type: 'Primary Sourcing Hub'
     },
     {
       id: 'loc_jaipur_studio',
@@ -85,7 +85,7 @@ export default function InventoryView({
             <thead className="bg-zinc-900/60 border-b border-zinc-800 text-[10px] font-mono font-semibold uppercase text-zinc-400 tracking-wider">
               <tr>
                 <th className="py-3 px-4">Product Style</th>
-                <th className="py-3 px-4">Surat Mill</th>
+                <th className="py-3 px-4">Surat Hub</th>
                 <th className="py-3 px-4">Jaipur Studio</th>
                 <th className="py-3 px-4">Guwahati Hub</th>
                 <th className="py-3 px-4">Total On Hand</th>
@@ -209,7 +209,7 @@ export default function InventoryView({
                   onChange={e => setAdjustReason(e.target.value)}
                   className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white"
                 >
-                  <option value="mill_production_batch">New Mill Production Batch Received</option>
+                  <option value="sourcing_batch_received">New Sourcing Batch Received</option>
                   <option value="wholesale_dispatch_reconciliation">Wholesale Dispatch Reconciliation</option>
                   <option value="inter_warehouse_transfer">Inter-Warehouse Transfer</option>
                   <option value="damage_fabric_writeoff">Fabric Defect / Write-Off</option>

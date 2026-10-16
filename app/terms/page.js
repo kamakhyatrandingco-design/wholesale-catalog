@@ -66,9 +66,9 @@ export default function TermsAndConditionsPage() {
           <section>
             <h2 className="font-serif text-xl font-bold text-stone-900 mb-3">3. Pricing, GST, and Invoicing</h2>
             <ul className="list-disc pl-5 space-y-2">
-              <li>All prices displayed in the online catalog represent direct Surat mill wholesale rates and are quoted ex-mill (FOB Surat).</li>
-              <li>Statutory Goods and Services Tax (GST) of 5% on apparel and textiles is charged additionally on all official tax invoices as per Government of India regulations.</li>
-              <li>Prices are subject to mill-level raw yarn and fabric market fluctuations. Final invoice pricing is locked upon formal Purchase Order confirmation by our trade desk.</li>
+              <li>Prices displayed in the online catalog represent direct mill-sourced wholesale rates on the wholesale portal, and curated retail rates on the retail storefront.</li>
+              <li>Statutory Goods and Services Tax (GST) on apparel and textiles is applied as per Government of India regulations.</li>
+              <li>Prices are subject to textile raw material market adjustments. Final invoice pricing is locked upon formal order confirmation by our trade desk.</li>
             </ul>
           </section>
 

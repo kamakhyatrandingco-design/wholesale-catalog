@@ -39,7 +39,7 @@ export default function WorkflowsView() {
         productId: 'anarkali-suit-set',
         locationId: 'loc_surat_central',
         delta: 25,
-        reason: 'mill_weft_delivery'
+        reason: 'sourcing_batch_delivery'
       }
     },
     {

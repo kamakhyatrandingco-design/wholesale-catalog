@@ -8,12 +8,14 @@ export default function WholesaleLineSheet({
   onAddToQuote,
   onQuickView,
   whatsappNumber = "916350626582",
+  isRetail = false,
   isVercel = false
 }) {
+  const retailMode = isRetail || isVercel;
   // Local quantity selections for line sheet batch addition
   const [lineQuantities, setLineQuantities] = useState({});
 
-  const isWholesale = isVercel ? false : purchaseMode === 'wholesale';
+  const isWholesale = retailMode ? false : purchaseMode === 'wholesale';
 
   const handleQtyChange = (productId, delta, step) => {
     setLineQuantities((prev) => {
@@ -50,21 +52,21 @@ export default function WholesaleLineSheet({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs uppercase tracking-widest font-black text-emerald-400">
-              {isVercel ? "Curated Collection List View" : "B2B Line-Sheet Order Matrix"}
+              {retailMode ? "Curated Collection List View" : "B2B Line-Sheet Order Matrix"}
             </span>
             <span className="bg-neutral-800 text-neutral-300 px-2 py-0.5 rounded text-[10px] font-mono">
-              {products.length} {isVercel ? "Designs" : "Lots"}
+              {products.length} {retailMode ? "Designs" : "Lots"}
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-0.5">
-            {isVercel
+            {retailMode
               ? "Browse all silhouettes, compare fabric weaves, and select pieces directly for order."
               : "Rapid lot quantity ordering for multi-store stockists, showrooms, and boutique buyers."}
           </p>
         </div>
-        {!isVercel && (
+        {!retailMode && (
           <div className="text-xs text-neutral-400 font-medium">
-            Prices: <span className="text-white font-bold">{isWholesale ? 'Direct Mill Wholesale' : 'Single Sampling'}</span>
+            Prices: <span className="text-white font-bold">{isWholesale ? 'Wholesale Lot Price' : 'Single Sampling'}</span>
           </div>
         )}
       </div>
@@ -77,7 +79,7 @@ export default function WholesaleLineSheet({
               <th className="py-3.5 px-4">Garment / SKU</th>
               <th className="py-3.5 px-4 hidden md:table-cell">Category &amp; Fabric</th>
               <th className="py-3.5 px-4 hidden lg:table-cell">Sizes Curve</th>
-              <th className="py-3.5 px-4">{isVercel ? "Price" : "Price / MOQ"}</th>
+              <th className="py-3.5 px-4">{retailMode ? "Price" : "Price / MOQ"}</th>
               <th className="py-3.5 px-4">Order Quantity</th>
               <th className="py-3.5 px-4 text-right">Line Total</th>
               <th className="py-3.5 px-4 text-center">Action</th>
@@ -87,12 +89,12 @@ export default function WholesaleLineSheet({
             {products.map((product) => {
               const wholesalePrice = Number(product.wholesale_price || 0);
               const retailPrice = Number(product.retail_price || product.wholesale_price || 0);
-              const unitPrice = isVercel ? retailPrice : (isWholesale ? wholesalePrice : retailPrice);
-              const moq = isVercel ? 1 : (isWholesale ? (product.moq || 30) : 1);
+              const unitPrice = retailMode ? retailPrice : (isWholesale ? wholesalePrice : retailPrice);
+              const moq = retailMode ? 1 : (isWholesale ? (product.moq || 30) : 1);
               const qty = getEffectiveQty(product);
               const lineTotal = unitPrice * qty;
 
-              const productMessage = isVercel
+              const productMessage = retailMode
                 ? `Namaste KTC Fashion!\n\nI want to order this garment:\n\n*Product:* ${product.title}\n*SKU:* ${product.sku}\n*Price:* ₹${unitPrice}\n*Order Quantity:* ${qty} pcs (Total: ₹${lineTotal.toLocaleString('en-IN')})\n\nPlease confirm availability and payment details.`
                 : `Namaste Kamakhya Trading Co!\n\nI want to place an order from your Line-Sheet:\n\n*Product:* ${product.title}\n*SKU:* ${product.sku}\n*Price:* ₹${unitPrice}/pc\n*Order Quantity:* ${qty} pcs (Total: ₹${lineTotal.toLocaleString('en-IN')})\n\nPlease share proforma invoice and dispatch date.`;
               const waUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(productMessage)}`;
@@ -134,7 +136,7 @@ export default function WholesaleLineSheet({
                       {product.category}
                     </span>
                     <span className="text-[11px] text-neutral-500 block">
-                      {product.fabric || 'Pure Mill Weave'}
+                      {product.fabric || 'Premium Fabric'}
                     </span>
                   </td>
 
@@ -202,9 +204,9 @@ export default function WholesaleLineSheet({
                           onAddToQuote({ ...product, customQty: qty }, e);
                         }}
                         className="px-3 py-1.5 bg-neutral-950 hover:bg-neutral-800 text-white rounded-lg font-bold text-[11px] transition-all shadow-2xs active:scale-95 cursor-pointer"
-                        title={isVercel ? "Add to shopping bag" : "Add this lot to bulk purchase order"}
+                        title={retailMode ? "Add to shopping bag" : "Add this lot to bulk purchase order"}
                       >
-                        {isVercel ? "+ Add to Bag" : "+ Add PO"}
+                        {retailMode ? "+ Add to Bag" : "+ Add PO"}
                       </button>
 
                       <a

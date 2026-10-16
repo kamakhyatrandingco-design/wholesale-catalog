@@ -236,7 +236,7 @@ export default function UserAuthModal({
                 : 'text-gray-400 hover:text-black'
             }`}
           >
-            Contact Mill Desk
+            Contact Trade Desk
           </button>
           <button
             onClick={() => setActiveTab('login')}

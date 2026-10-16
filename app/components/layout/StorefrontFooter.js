@@ -7,8 +7,11 @@ export default function StorefrontFooter({
   onOpenGuide,
   onOpenAuth,
   onOpenAbout,
+  isRetail = false,
   isVercel = false
 }) {
+  const retailMode = isRetail || isVercel;
+
   return (
     <footer className="bg-[#0c0c0e] text-neutral-400 text-xs border-t border-neutral-800/90 pt-16 pb-24 md:pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-12">
@@ -22,12 +25,12 @@ export default function StorefrontFooter({
               </svg>
             </div>
             <h4 className="text-sm font-bold text-neutral-200 uppercase tracking-wider">
-              {isVercel ? "Artisan Craftsmanship" : "Direct Mill Pricing"}
+              {retailMode ? "Artisan Craftsmanship" : "Direct Mill-Sourced Rates"}
             </h4>
             <p className="text-[12px] text-neutral-400 leading-relaxed">
-              {isVercel
+              {retailMode
                 ? "Exquisite embroidery, premium fabrics, and tailored finishing curated for timeless festive elegance."
-                : "Zero middlemen markups. Sourced and manufactured directly from integrated textile looms for competitive commercial rates."}
+                : "Procured directly from leading textile mills in Surat and Jaipur, supplied at competitive wholesale rates with zero middleman commissions."}
             </p>
           </div>
 
@@ -38,10 +41,10 @@ export default function StorefrontFooter({
               </svg>
             </div>
             <h4 className="text-sm font-bold text-neutral-200 uppercase tracking-wider">
-              {isVercel ? "Protective Packaging" : "Reinforced Bale Packing"}
+              {retailMode ? "Protective Packaging" : "Reinforced Bale Packing"}
             </h4>
             <p className="text-[12px] text-neutral-400 leading-relaxed">
-              {isVercel
+              {retailMode
                 ? "Carefully inspected and securely packaged ensuring each apparel piece arrives in pristine, ready-to-wear condition."
                 : "High-density water-resistant plastic wrapping and corrugated strapping to ensure spotless transit across India."}
             </p>
@@ -54,10 +57,10 @@ export default function StorefrontFooter({
               </svg>
             </div>
             <h4 className="text-sm font-bold text-neutral-200 uppercase tracking-wider">
-              {isVercel ? "Pan-India Express Delivery" : "Pan-India Freight Dispatches"}
+              {retailMode ? "Pan-India Express Delivery" : "Pan-India Freight Dispatches"}
             </h4>
             <p className="text-[12px] text-neutral-400 leading-relaxed">
-              {isVercel
+              {retailMode
                 ? "Fast, tracked doorstep shipping across all Indian postal pin codes with continuous transit tracking updates."
                 : "Partnered with commercial logistics carriers (V-Trans, TCI Freight, Safechem, Delhivery) with LR / consignment slips shared on dispatch."}
             </p>
@@ -70,10 +73,10 @@ export default function StorefrontFooter({
               </svg>
             </div>
             <h4 className="text-sm font-bold text-neutral-200 uppercase tracking-wider">
-              {isVercel ? "Authenticity Guaranteed" : "GST Compliant Invoicing"}
+              {retailMode ? "Authenticity Guaranteed" : "GST Compliant Invoicing"}
             </h4>
             <p className="text-[12px] text-neutral-400 leading-relaxed">
-              {isVercel
+              {retailMode
                 ? "100% genuine ethnic fabrics and tailored silhouettes with transparent pricing and complete customer care."
                 : "100% tax-compliant proforma invoices provided for full Input Tax Credit (ITC) claiming under 5% / 12% apparel GST slabs."}
             </p>
@@ -87,23 +90,23 @@ export default function StorefrontFooter({
           <div className="md:col-span-4 space-y-4">
             <div className="flex items-center gap-2">
               <span className="font-serif-display text-2xl font-black tracking-tight text-white uppercase">
-                {isVercel ? "KTC" : "Kamakhya"}
+                {retailMode ? "KTC" : "Kamakhya"}
               </span>
               <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 bg-neutral-800 text-white rounded-xs">
-                {isVercel ? "Fashion" : "Trading Co"}
+                {retailMode ? "Fashion" : "Trading Co"}
               </span>
             </div>
             <p className="text-xs text-neutral-400 leading-relaxed pr-4">
-              {isVercel
+              {retailMode
                 ? "Curated women's and girls' ethnic couture, festive bridal lehengas, contemporary western silhouettes, and girls' celebration apparel delivered directly to your doorstep."
-                : "Women's and girls' wholesale apparel manufacturing. Supplying festive ethnic wear, modern western silhouettes, bridal lehengas, and children's partywear to boutiques, retail stores, and regional stockists."}
+                : "Women's and girls' wholesale apparel sourcing and trade distribution. Supplying festive ethnic wear, modern western silhouettes, bridal lehengas, and children's partywear to boutiques, retail stores, and regional stockists."}
             </p>
             <div className="flex items-center gap-2 text-[11px] text-neutral-400">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               <span>
-                {isVercel
+                {retailMode
                   ? "Daily dispatches from Surat and Jaipur design ateliers."
-                  : "Daily factory dispatch from Surat and Jaipur manufacturing hubs."}
+                  : "Daily dispatches from Surat and Jaipur sourcing hubs."}
               </span>
             </div>
           </div>
@@ -111,7 +114,7 @@ export default function StorefrontFooter({
           {/* Services / Navigation */}
           <div className="md:col-span-3 space-y-3">
             <h5 className="text-xs font-bold uppercase tracking-wider text-neutral-200">
-              {isVercel ? "Customer Navigation" : "Buyer Navigation"}
+              {retailMode ? "Customer Navigation" : "Buyer Navigation"}
             </h5>
             <ul className="space-y-2 text-xs">
               <li>
@@ -119,7 +122,7 @@ export default function StorefrontFooter({
                   onClick={onOpenGuide}
                   className="hover:text-white transition-colors cursor-pointer text-left"
                 >
-                  {isVercel ? "Apparel Sizing & Care Guide" : "B2B Buyer Onboarding Guide"}
+                  {retailMode ? "Apparel Sizing & Care Guide" : "B2B Buyer Sourcing Guide"}
                 </button>
               </li>
               <li>
@@ -127,7 +130,7 @@ export default function StorefrontFooter({
                   onClick={onOpenAuth}
                   className="hover:text-amber-400 transition-colors cursor-pointer text-left"
                 >
-                  {isVercel ? "Customer Account & Orders" : "Buyer Login & Restock Requests"}
+                  {retailMode ? "Customer Account" : "Buyer Account & Inquiries"}
                 </button>
               </li>
               <li>
@@ -135,7 +138,7 @@ export default function StorefrontFooter({
                   href="/terms"
                   className="hover:text-white transition-colors block"
                 >
-                  {isVercel ? "Terms & Conditions" : "Wholesale Terms & Conditions"}
+                  {retailMode ? "Terms & Conditions" : "Wholesale Terms & Conditions"}
                 </Link>
               </li>
               <li>
@@ -146,24 +149,16 @@ export default function StorefrontFooter({
                   Privacy Policy
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/admin"
-                  className="hover:text-neutral-300 transition-colors block text-neutral-500"
-                >
-                  Staff Portal
-                </Link>
-              </li>
             </ul>
           </div>
 
           {/* Delivery & Assurance */}
           <div className="md:col-span-2 space-y-3">
             <h5 className="text-xs font-bold uppercase tracking-wider text-neutral-200">
-              {isVercel ? "Customer Experience" : "Logistics Partners"}
+              {retailMode ? "Customer Experience" : "Logistics Partners"}
             </h5>
             <ul className="space-y-1.5 text-[11px] text-neutral-400">
-              {isVercel ? (
+              {retailMode ? (
                 <>
                   <li>Doorstep Delivery Across India</li>
                   <li>WhatsApp Order Confirmation</li>
@@ -188,18 +183,18 @@ export default function StorefrontFooter({
           {/* Direct WhatsApp Contact */}
           <div className="md:col-span-3 space-y-3">
             <h5 className="text-xs font-bold uppercase tracking-wider text-neutral-200">
-              {isVercel ? "Customer Concierge" : "Mill Trade Desk"}
+              {retailMode ? "Customer Concierge" : "WhatsApp Trade Desk"}
             </h5>
             <p className="text-xs text-neutral-400 leading-relaxed">
-              {isVercel
+              {retailMode
                 ? "Have questions regarding sizing, custom color options, or express delivery dates?"
-                : "Have a custom manufacturing inquiry or need immediate stock availability confirmation?"}
+                : "Need stock availability confirmation or looking for specific wholesale catalog lots?"}
             </p>
             <a
               href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-                isVercel
+                retailMode
                   ? "Namaste KTC Fashion! I would like assistance with an order from your retail collection."
-                  : "Namaste Kamakhya Trading Co! I want to discuss bulk wholesale catalog and custom manufacturing."
+                  : "Namaste Kamakhya Trading Co! I want to discuss wholesale catalog lots and sourcing."
               )}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -217,7 +212,7 @@ export default function StorefrontFooter({
         {/* Row 3: Bottom Bar & Legal */}
         <div className="pt-8 border-t border-neutral-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-neutral-500">
           <div>
-            &copy; {new Date().getFullYear()} {isVercel ? "KTC Fashion. Curated Designer Silhouettes & Ethnic Apparel." : "Kamakhya Trading Co. Direct Factory Mill Wholesale & Manufacturing."}
+            &copy; {new Date().getFullYear()} {retailMode ? "KTC Fashion. Curated Designer Silhouettes & Ethnic Apparel." : "Kamakhya Trading Co. Wholesale Apparel Sourcing & Distribution."}
           </div>
           <div className="flex items-center gap-4">
             <Link href="/terms" className="hover:text-neutral-300 transition-colors">
@@ -228,7 +223,7 @@ export default function StorefrontFooter({
               Privacy Policy
             </Link>
             <span>&bull;</span>
-            <span>{isVercel ? "Direct Retail Storefront" : "Wholesale B2B Only"}</span>
+            <span>{retailMode ? "Direct Retail Storefront" : "Wholesale B2B Trade"}</span>
             <span>&bull;</span>
             <span>GST Registered</span>
           </div>

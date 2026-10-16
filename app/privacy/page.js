@@ -71,9 +71,9 @@ export default function PrivacyPolicyPage() {
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-stone-700">
               <li>Generating compliant commercial tax invoices under applicable Indian Goods and Services Tax (GST) statutes.</li>
-              <li>Booking third-party commercial transport carriers, courier services, or Indian Railways parcel booking for consignment dispatch from Surat.</li>
+              <li>Booking third-party commercial transport carriers or courier services for consignment dispatch from Surat and Jaipur hubs.</li>
               <li>Communicating dispatch status, proof of consignment (bilty/LR copies), and tracking references via official WhatsApp desks.</li>
-              <li>Verifying legitimate boutique trade credentials to protect mill-level wholesale price confidentiality.</li>
+              <li>Verifying legitimate boutique trade credentials to protect wholesale price confidentiality.</li>
             </ul>
           </section>
 

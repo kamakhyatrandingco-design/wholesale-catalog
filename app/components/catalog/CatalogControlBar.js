@@ -15,9 +15,11 @@ export default function CatalogControlBar({
   purchaseMode,
   totalResults = 0,
   onResetFilters,
+  isRetail = false,
   isVercel = false
 }) {
-  const quickSearchChips = isVercel
+  const retailMode = isRetail || isVercel;
+  const quickSearchChips = retailMode
     ? [
         "Ethnic under 1000",
         "Girls Partywear",
@@ -133,10 +135,10 @@ export default function CatalogControlBar({
           
           {/* Left: Mode & Results Context */}
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className={`w-2.5 h-2.5 rounded-full ${isVercel ? 'bg-emerald-500' : (purchaseMode === 'wholesale' ? 'bg-neutral-950' : 'bg-emerald-500')}`} />
+            <div className={`w-2.5 h-2.5 rounded-full ${retailMode ? 'bg-emerald-500' : (purchaseMode === 'wholesale' ? 'bg-neutral-950' : 'bg-emerald-500')}`} />
             <div>
               <div className="text-xs sm:text-sm font-bold text-neutral-900">
-                {isVercel ? (
+                {retailMode ? (
                   <>
                     <span>Collection Catalog</span>
                     <span className="text-neutral-400 font-normal ml-2">
@@ -153,7 +155,7 @@ export default function CatalogControlBar({
                 )}
               </div>
               <p className="text-[11px] text-neutral-500 hidden md:block">
-                {isVercel
+                {retailMode
                   ? 'Handcrafted designer pieces • Standard Indian sizing with insured doorstep delivery.'
                   : (purchaseMode === 'wholesale'
                     ? 'Wholesale rates per piece for bulk retail stockists (MOQ applies).'
@@ -189,12 +191,12 @@ export default function CatalogControlBar({
                     ? 'bg-neutral-950 text-white shadow-xs'
                     : 'text-neutral-500 hover:text-black'
                 }`}
-                title={isVercel ? "List View" : "B2B Wholesale Matrix Line-Sheet"}
+                title={retailMode ? "List View" : "B2B Wholesale Matrix Line-Sheet"}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
-                <span>{isVercel ? "List" : "Line-Sheet"}</span>
+                <span>{retailMode ? "List" : "Line-Sheet"}</span>
               </button>
             </div>
 
@@ -206,10 +208,10 @@ export default function CatalogControlBar({
                 onChange={(e) => setSortBy(e.target.value)}
                 className="text-xs font-bold bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-1.5 text-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-900 cursor-pointer"
               >
-                <option value="default">{isVercel ? "Featured Designs" : "Featured Lots"}</option>
+                <option value="default">{retailMode ? "Featured Designs" : "Featured Lots"}</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
-                {!isVercel && <option value="moq-low">Lowest MOQ First</option>}
+                {!retailMode && <option value="moq-low">Lowest MOQ First</option>}
               </select>
             </div>
 

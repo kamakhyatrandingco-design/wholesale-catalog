@@ -5,11 +5,11 @@ import { useState } from 'react';
 const WHOLESALE_GUIDE_STEPS = [
   {
     step: 1,
-    title: 'Factory Wholesale vs Single Retail Mode',
-    description: 'Toggle between Wholesale and Retail at the top navbar anytime.',
+    title: 'Direct Mill Sourcing & Wholesale Lots',
+    description: 'We procure directly from integrated mills in Surat and Jaipur and supply at wholesale rates.',
     details: [
-      'Wholesale Mode: Displays direct factory mill rates and minimum order quantities (MOQ 25 to 50 pcs) for boutiques & retailers.',
-      'Retail Mode: Displays single piece pricing for individual sampling to inspect fabric & stitching quality.'
+      'Wholesale Mode: Displays direct wholesale rates and lot quantities (MOQ 25 to 50 pcs) for boutiques & apparel stockists.',
+      'Transparent Lot Economics: Eliminates middleman markups so you get genuine mill-sourced apparel at honest wholesale prices.'
     ]
   },
   {
@@ -29,7 +29,7 @@ const WHOLESALE_GUIDE_STEPS = [
     details: [
       'Click "+ Add to Bulk PO" on any product card or line-sheet to assemble a purchase order across colors and sizes.',
       'Open the Bulk PO drawer to review total pieces and estimated proforma value.',
-      'Tap "Send Purchase Order on WhatsApp" to generate a pre-formatted order sent directly to factory dispatch (+91 63506 26582).'
+      'Tap "Send Purchase Order on WhatsApp" to generate a pre-formatted order sent directly to trade desk (+91 63506 26582).'
     ]
   },
   {
@@ -38,7 +38,7 @@ const WHOLESALE_GUIDE_STEPS = [
     description: '100% tax-compliant proforma invoices and nationwide commercial dispatch.',
     details: [
       'Full Input Tax Credit (ITC) compliant proforma invoices under 5% and 12% apparel GST slabs.',
-      'Daily factory dispatch from Surat and Jaipur hubs with LR / consignment slips shared via WhatsApp.',
+      'Daily wholesale dispatch from Surat and Jaipur sourcing hubs with LR / consignment slips shared via WhatsApp.',
       'Partnered with commercial carriers: V-Trans, TCI Freight, Safechem, Delhivery, and BlueDart.'
     ]
   }
@@ -87,12 +87,13 @@ const RETAIL_GUIDE_STEPS = [
   }
 ];
 
-export default function NewUserGuide({ isOpen, onClose, isVercel = false }) {
+export default function NewUserGuide({ isOpen, onClose, isRetail = false, isVercel = false }) {
   const [activeStep, setActiveStep] = useState(0);
 
   if (!isOpen) return null;
 
-  const steps = isVercel ? RETAIL_GUIDE_STEPS : WHOLESALE_GUIDE_STEPS;
+  const retailMode = isRetail || isVercel;
+  const steps = retailMode ? RETAIL_GUIDE_STEPS : WHOLESALE_GUIDE_STEPS;
   const current = steps[activeStep] || steps[0];
 
   return (
@@ -113,12 +114,12 @@ export default function NewUserGuide({ isOpen, onClose, isVercel = false }) {
             </div>
             <div>
               <h2 className="text-lg font-black text-gray-900 tracking-tight uppercase">
-                {isVercel ? "KTC Fashion Shopping Guide" : "B2B Buyer Onboarding Guide"}
+                {retailMode ? "KTC Fashion Shopping Guide" : "B2B Buyer Onboarding Guide"}
               </h2>
               <p className="text-xs text-gray-500">
-                {isVercel
+                {retailMode
                   ? "How to explore curated designer apparel, select sizing & complete doorstep orders"
-                  : "How to navigate Kamakhya wholesale catalog, line-sheets & factory ordering"}
+                  : "How to navigate Kamakhya wholesale catalog, line-sheets & wholesale lot ordering"}
               </p>
             </div>
           </div>

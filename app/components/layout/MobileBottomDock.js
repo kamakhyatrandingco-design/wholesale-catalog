@@ -7,8 +7,10 @@ export default function MobileBottomDock({
   onOpenAuth,
   whatsappNumber = "916350626582",
   onScrollToCatalog,
+  isRetail = false,
   isVercel = false
 }) {
+  const retailMode = isRetail || isVercel;
   return (
     <aside
       aria-label="Mobile Quick Action Dock"
@@ -19,7 +21,7 @@ export default function MobileBottomDock({
         {/* Catalog Jump */}
         <button
           onClick={onScrollToCatalog}
-          className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:text-black transition-colors flex-1"
+          className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:text-black transition-colors flex-1 cursor-pointer"
         >
           <svg className="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -27,23 +29,23 @@ export default function MobileBottomDock({
           <span>Catalog</span>
         </button>
 
-        {/* Account / Buyer Portal */}
+        {/* Account / Buyer Login Modal */}
         <button
           onClick={onOpenAuth}
-          className="flex flex-col items-center justify-center p-1.5 rounded-lg text-neutral-700 hover:text-black transition-colors flex-1"
+          className="flex flex-col items-center justify-center p-1.5 rounded-lg text-neutral-700 hover:text-black transition-colors flex-1 cursor-pointer"
         >
           <svg className="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
           </svg>
-          <span>{isVercel ? "Account" : "Portal"}</span>
+          <span>Account</span>
         </button>
 
         {/* WhatsApp Chat */}
         <a
           href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-            isVercel
+            retailMode
               ? "Namaste KTC Fashion! I want to inquire about your designer apparel collection."
-              : "Namaste Kamakhya Trading Co! I want to inquire about bulk wholesale catalogs and factory rates."
+              : "Namaste Kamakhya Trading Co! I want to inquire about bulk wholesale catalogs and wholesale rates."
           )}`}
           target="_blank"
           rel="noopener noreferrer"
@@ -58,7 +60,7 @@ export default function MobileBottomDock({
         {/* Bag / Bulk PO Drawer Trigger */}
         <button
           onClick={onOpenCart}
-          className="relative flex flex-col items-center justify-center p-1.5 px-3 rounded-xl bg-neutral-950 text-white font-bold flex-1 shadow-sm active:scale-95"
+          className="relative flex flex-col items-center justify-center p-1.5 px-3 rounded-xl bg-neutral-950 text-white font-bold flex-1 shadow-sm active:scale-95 cursor-pointer"
         >
           <div className="relative">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,7 +72,7 @@ export default function MobileBottomDock({
               </span>
             )}
           </div>
-          <span className="text-[9px] mt-0.5">{isVercel ? "Bag" : "Bulk PO"}</span>
+          <span className="text-[9px] mt-0.5">{retailMode ? "Bag" : "Bulk PO"}</span>
         </button>
 
       </div>

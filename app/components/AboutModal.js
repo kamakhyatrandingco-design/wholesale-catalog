@@ -24,7 +24,7 @@ export default function AboutModal({ isOpen, onClose }) {
                 Kamakhya Trading Co
               </h2>
               <p className="text-xs text-neutral-500 font-semibold">
-                Direct Mill Fashion Manufacturing &amp; Wholesale B2B
+                Direct Mill-Sourced Apparel &amp; Wholesale Trade
               </p>
             </div>
           </div>
@@ -40,13 +40,13 @@ export default function AboutModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Story & Factory Overview */}
+        {/* Story & Sourcing Overview */}
         <div className="space-y-3 text-xs sm:text-sm text-neutral-600 leading-relaxed">
           <p>
-            <strong>Kamakhya Trading Co (KTC)</strong> is an integrated apparel manufacturing facility delivering festive ethnic wear, modern western ensembles, bridal lehengas, and girls&apos; partywear directly from factory looms to retailers across India.
+            <strong>Kamakhya Trading Co (KTC)</strong> sources high-quality apparel directly from verified textile mills in Surat and Jaipur, supplying curated festive ethnic wear, modern western ensembles, bridal lehengas, and girls&apos; partywear across India.
           </p>
           <p>
-            By eliminating intermediary distributor markups, KTC empowers boutique owners and independent apparel merchants to purchase genuine mill-direct inventory at competitive factory rates with transparent lot pricing.
+            We take items directly from the mills and provide them at direct wholesale rates. By eliminating middle-tier markups, KTC empowers boutique owners, independent retailers, and shoppers to access genuine mill-sourced collections with complete transparency.
           </p>
         </div>
 
@@ -63,60 +63,55 @@ export default function AboutModal({ isOpen, onClose }) {
           </div>
 
           <p className="text-xs text-neutral-500">
-            The platform is simultaneously hosted and production-ready on both <strong>Netlify</strong> and <strong>Vercel</strong>, synchronizing with the same headless catalog architecture:
+            Dedicated portals configured for our retail customers and B2B wholesale partners:
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            {/* Netlify Card */}
+            {/* Netlify Card - Retail */}
             <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between space-y-2.5">
               <div>
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs text-neutral-950 flex items-center gap-1.5">
-                    <span>Netlify Production</span>
+                    <span>Retail Storefront</span>
                   </span>
                   <span className="text-[10px] font-mono bg-teal-50 text-teal-700 font-semibold px-2 py-0.5 rounded-md border border-teal-200">
-                    Next.js Runtime
+                    Netlify
                   </span>
                 </div>
                 <div className="text-[11px] font-mono text-neutral-500 mt-1 truncate">
                   ktcfashion.netlify.app
                 </div>
+                <div className="text-[10px] text-neutral-500 mt-1">
+                  Single pieces, doorstep delivery, no MOQs
+                </div>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <a
-                  href="https://ktcfashion.netlify.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full text-center px-3 py-1.5 bg-[#00C7B7] hover:bg-[#00b0a2] text-white font-bold text-xs rounded-lg transition-colors shadow-xs"
-                >
-                  Open on Netlify &rarr;
-                </a>
-                <a
-                  href="https://app.netlify.com/start/deploy?repository=https://github.com/kamakhyatrandingco-design/wholesale-catalog"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full text-center px-2 py-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold text-[10px] rounded-md transition-colors"
-                  title="If site is not yet launched on your Netlify account, click to 1-click deploy"
-                >
-                  Deploy to Netlify Account
-                </a>
-              </div>
+              <a
+                href="https://ktcfashion.netlify.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full text-center px-3 py-1.5 bg-[#00C7B7] hover:bg-[#00b0a2] text-white font-bold text-xs rounded-lg transition-colors shadow-xs"
+              >
+                Open Retail Store &rarr;
+              </a>
             </div>
 
-            {/* Vercel Card */}
-            <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between space-y-2">
+            {/* Vercel Card - Wholesale */}
+            <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between space-y-2.5">
               <div>
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs text-neutral-950 flex items-center gap-1.5">
-                    <span>Vercel Edge</span>
+                    <span>Wholesale Sourcing</span>
                   </span>
                   <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded-md border border-emerald-200">
-                    Live
+                    Vercel
                   </span>
                 </div>
                 <div className="text-[11px] font-mono text-neutral-500 mt-1 truncate">
                   wholesale-catalog-ktc8.vercel.app
+                </div>
+                <div className="text-[10px] text-neutral-500 mt-1">
+                  B2B lots, wholesale ex-mill rates, bulk POs
                 </div>
               </div>
 
@@ -126,7 +121,7 @@ export default function AboutModal({ isOpen, onClose }) {
                 rel="noopener noreferrer"
                 className="w-full text-center px-3 py-1.5 bg-neutral-900 hover:bg-black text-white font-bold text-xs rounded-lg transition-colors shadow-xs"
               >
-                Open on Vercel &rarr;
+                Open Wholesale Portal &rarr;
               </a>
             </div>
           </div>
@@ -135,7 +130,7 @@ export default function AboutModal({ isOpen, onClose }) {
         {/* Dispatch & Contact Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-neutral-200 text-xs text-neutral-500">
           <div>
-            Surat Weaving Mills &bull; Jaipur Finishing &bull; Pan-India Dispatch
+            Surat &amp; Jaipur Mill Sourcing &bull; Quality Checked &bull; Pan-India Dispatch
           </div>
           <div className="font-mono text-neutral-700 font-semibold">
             Trade Desk: +91 63506 26582

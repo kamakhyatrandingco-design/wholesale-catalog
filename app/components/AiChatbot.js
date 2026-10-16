@@ -7,16 +7,18 @@ const OWNER_PHONE = "916350626582";
 export default function AiChatbot({
   products = [],
   onOpenRestock = null,
+  isRetail = false,
   isVercel = false
 }) {
+  const retailMode = isRetail || isVercel;
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
       sender: 'bot',
-      text: isVercel
+      text: retailMode
         ? 'Welcome to KTC Fashion Style & Order Concierge. We assist with outfit sizing, fabric details, single piece ordering, and doorstep delivery across India in English or Hindi.'
-        : 'Welcome to KTC Wholesale Trade Desk. We assist verified boutique owners with factory direct mill rates, minimum order quantities (MOQ), fabric specifications, and custom lot bookings in English or Hindi.',
+        : 'Welcome to KTC Wholesale Trade Desk. We assist verified boutique owners with direct mill-sourced wholesale rates, minimum order quantities (MOQ), fabric specifications, and bulk lot bookings in English or Hindi.',
       lang: 'en'
     }
   ]);
@@ -113,7 +115,7 @@ export default function AiChatbot({
 
     // 3. Questions about MOQ or Minimums
     if (/moq|minimum|kitne piece|how many|single piece/i.test(q)) {
-      if (isVercel) {
+      if (retailMode) {
         if (isHindi) {
           return {
             text: "KTC Fashion par sabhi apparel designs individual retail purchase ke liye uplabdh hain. Koi minimum order quantity nahi hai, aap apni pasand ka single piece bhi seedha order kar sakte hain.",
@@ -139,7 +141,7 @@ export default function AiChatbot({
 
     // 4. Questions about profit / rates
     if (/profit|margin|kamai|calculator|roi|rate/i.test(q)) {
-      if (isVercel) {
+      if (retailMode) {
         if (isHindi) {
           return {
             text: "Hamare sabhi retail rates transparent hain aur inme standard GST shamil hai. Single piece order seedha aapke address par deliver hota hai.",
@@ -153,12 +155,12 @@ export default function AiChatbot({
       }
       if (isHindi) {
         return {
-          text: "Hamare sabhi rates direct Surat mill manufacturing prices par aadharit hain, jisme koi middlemen commission nahi hota. B2B invoices me 5% GST aur transport charges transparently calculate kiye jaate hain.",
+          text: "Hamare sabhi rates direct Surat aur Jaipur mill sourcing prices par aadharit hain, jisme koi middlemen commission nahi hota. B2B invoices me 5% GST aur transport charges transparently calculate kiye jaate hain.",
           action: 'wholesale_info'
         };
       }
       return {
-        text: "Our catalogue reflects direct Surat manufacturing mill prices with zero distributor markups. Invoices are generated with standard 5% textile GST and actual freight forwarding charges.",
+        text: "Our catalogue reflects direct Surat & Jaipur mill-sourced wholesale prices with zero distributor markups. Invoices are generated with standard 5% textile GST and actual freight forwarding charges.",
         action: 'wholesale_info'
       };
     }
@@ -207,7 +209,7 @@ export default function AiChatbot({
 
     // 8. Product search matching
     const matchingProducts = products.filter(p => {
-      const priceToCheck = isVercel
+      const priceToCheck = retailMode
         ? Number(p.retail_price || p.sample_price || p.wholesale_price * 1.4 || 999)
         : Number(p.wholesale_price || 0);
       const matchCat = !matchedCategory || p.category === matchedCategory;
@@ -221,24 +223,24 @@ export default function AiChatbot({
 
     if (matchingProducts.length > 0) {
       const prodList = matchingProducts.map(p => {
-        const displayPrice = isVercel
+        const displayPrice = retailMode
           ? (p.retail_price || p.sample_price || Math.round(Number(p.wholesale_price || 600) * 1.4))
           : p.wholesale_price;
-        return isVercel
+        return retailMode
           ? `* ${p.title} (₹${displayPrice})`
           : `* ${p.title} (Rs ${displayPrice}/pc, MOQ: ${p.moq || 30})`;
       }).join('\n');
 
       if (isHindi) {
         return {
-          text: isVercel
+          text: retailMode
             ? `Aapki request ke anusaar ready designs:\n\n${prodList}\n\nAap inko seedha Shopping Bag me add kar sakte hain ya WhatsApp par order kar sakte hain.`
             : `Aapki request ke anusaar ready-stock lots:\n\n${prodList}\n\nAap inka lot direct Purchase Order me add kar sakte hain ya WhatsApp par verify kar sakte hain.`,
           recommended: matchingProducts
         };
       }
       return {
-        text: isVercel
+        text: retailMode
           ? `Curated designs matching your request:\n\n${prodList}\n\nAdd directly to your Shopping Bag or confirm through WhatsApp.`
           : `Commercial lots matching your query:\n\n${prodList}\n\nAdd directly to your wholesale Purchase Order or request immediate fabric swatch dispatch.`,
         recommended: matchingProducts
@@ -248,17 +250,17 @@ export default function AiChatbot({
     // Default Fallback
     if (isHindi) {
       return {
-        text: isVercel
+        text: retailMode
           ? "KTC Fashion me Kurtis, Festive Lehengas, Western Tops aur Girls Frocks ready stock me uplabdh hain. Kisi bhi design ka size ya rate janne ke liye WhatsApp concierge par sampark karein (+91 63506 26582)."
-          : "Kamakhya Trading Co me Kurtis, Lehengas, Sarees, Western Tops aur Girls Frocks direct Surat mill rates par uplabdh hain. Kisi bhi design ka rate janne ya custom lot order karne ke liye WhatsApp desk par sampark karein (+91 63506 26582).",
+          : "Kamakhya Trading Co me Kurtis, Lehengas, Sarees, Western Tops aur Girls Frocks direct mill-sourced wholesale rates par uplabdh hain. Kisi bhi design ka rate janne ya custom lot order karne ke liye WhatsApp desk par sampark karein (+91 63506 26582).",
         action: 'general'
       };
     }
 
     return {
-      text: isVercel
+      text: retailMode
         ? "KTC Fashion offers curated ethnic couture, festive bridal lehengas, western silhouettes, and girls' celebration apparel. Tell us your preferred style, fabric, or color to view available pieces."
-        : "KTC Fashion manufactures premium ethnic, bridal, western and junior apparel at direct mill prices. Specify your required style, fabric or budget for instant inventory lookup.",
+        : "Kamakhya Trading Co sources premium ethnic, bridal, western and junior apparel directly from integrated mills at wholesale rates. Specify your required style, fabric or budget for instant inventory lookup.",
       action: 'general'
     };
   };
@@ -301,7 +303,7 @@ export default function AiChatbot({
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="bg-neutral-900 hover:bg-black text-white pl-3.5 pr-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2.5 border border-neutral-700 transition-all hover:scale-[1.02] active:scale-[0.98] group"
-          aria-label={isVercel ? "Open Style Concierge" : "Open Wholesale Desk"}
+          aria-label={retailMode ? "Open Style Concierge" : "Open Wholesale Desk"}
         >
           <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
           <svg className="w-4 h-4 text-stone-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -309,10 +311,10 @@ export default function AiChatbot({
           </svg>
           <div className="text-left text-xs">
             <span className="font-semibold block leading-none text-white tracking-wide">
-              {isVercel ? "Style Concierge" : "Wholesale Desk"}
+              {retailMode ? "Style Concierge" : "Wholesale Desk"}
             </span>
             <span className="text-[10px] text-stone-400 font-medium">
-              {isVercel ? "Order & Sizing Help" : "B2B Trade Inquiries"}
+              {retailMode ? "Order & Sizing Help" : "B2B Trade Inquiries"}
             </span>
           </div>
         </button>
@@ -332,11 +334,11 @@ export default function AiChatbot({
               </div>
               <div>
                 <h3 className="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
-                  <span>{isVercel ? "KTC Style Concierge" : "KTC Trade Assistant"}</span>
+                  <span>{retailMode ? "KTC Style Concierge" : "KTC Trade Assistant"}</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 </h3>
                 <p className="text-[10px] text-stone-400">
-                  {isVercel ? "Customer Care & Styling Desk" : "Factory Dispatch & Commercial Desk"}
+                  {retailMode ? "Customer Care & Styling Desk" : "Wholesale Sourcing & Commercial Desk"}
                 </p>
               </div>
             </div>
@@ -367,7 +369,7 @@ export default function AiChatbot({
 
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-7 h-7 rounded-md bg-neutral-900 hover:bg-neutral-800 text-stone-400 hover:text-white flex items-center justify-center transition-colors"
+                className="w-7 h-7 rounded-md bg-neutral-900 hover:bg-neutral-800 text-stone-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                 aria-label="Close chat"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -379,29 +381,29 @@ export default function AiChatbot({
 
           {/* Quick Action Suggestion Chips */}
           <div className="p-2 bg-stone-50 border-b border-stone-200 flex gap-1.5 overflow-x-auto text-[11px] font-medium scrollbar-none flex-shrink-0">
-            {isVercel ? (
+            {retailMode ? (
               <>
                 <button
                   onClick={() => handleSendMessage("Show kurti designs")}
-                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors"
+                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors cursor-pointer"
                 >
                   Kurti Collection
                 </button>
                 <button
                   onClick={() => handleSendMessage("What sizes are available?")}
-                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors"
+                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors cursor-pointer"
                 >
                   Sizing & Fit
                 </button>
                 <button
                   onClick={() => handleSendMessage("Can I order single pieces?")}
-                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors"
+                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors cursor-pointer"
                 >
                   Single Piece Order
                 </button>
                 <button
                   onClick={() => handleSendMessage("How does delivery work?")}
-                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors"
+                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors cursor-pointer"
                 >
                   Delivery Timeline
                 </button>
@@ -410,19 +412,19 @@ export default function AiChatbot({
               <>
                 <button
                   onClick={() => handleSendMessage("Show kurti designs under 600")}
-                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors"
+                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors cursor-pointer"
                 >
                   Kurti under Rs 600
                 </button>
                 <button
                   onClick={() => handleSendMessage("What are bridal lehenga wholesale rates?")}
-                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors"
+                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors cursor-pointer"
                 >
                   Bridal Lehenga Rates
                 </button>
                 <button
                   onClick={() => handleSendMessage("What is the wholesale MOQ per design?")}
-                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors"
+                  className="px-2.5 py-1 bg-white hover:bg-stone-100 rounded-md border border-stone-200 text-stone-800 whitespace-nowrap transition-colors cursor-pointer"
                 >
                   Wholesale MOQ
                 </button>
@@ -455,7 +457,7 @@ export default function AiChatbot({
                     {msg.recommended && (
                       <div className="mt-2.5 pt-2 border-t border-stone-100 space-y-2">
                         {msg.recommended.map((item) => {
-                          const displayPrice = isVercel
+                          const displayPrice = retailMode
                             ? (item.retail_price || item.sample_price || Math.round(Number(item.wholesale_price || 600) * 1.4))
                             : item.wholesale_price;
                           return (
@@ -464,7 +466,7 @@ export default function AiChatbot({
                               <div className="flex-1 min-w-0">
                                 <span className="font-semibold text-[11px] block truncate text-stone-900">{item.title}</span>
                                 <span className="text-[10px] text-stone-700 font-bold">
-                                  {isVercel ? `₹${displayPrice}` : `Rs ${displayPrice}/pc (MOQ: ${item.moq || 30})`}
+                                  {retailMode ? `₹${displayPrice}` : `Rs ${displayPrice}/pc (MOQ: ${item.moq || 30})`}
                                 </span>
                               </div>
                             </div>
@@ -476,9 +478,9 @@ export default function AiChatbot({
                     {msg.action === 'open_restock' && (
                       <a
                         href={`https://wa.me/${OWNER_PHONE}?text=${encodeURIComponent(
-                          isVercel
+                          retailMode
                             ? "Namaste KTC Fashion! I need assistance with product details and ordering."
-                            : "Namaste Kamakhya Trading Co! I want to discuss bulk wholesale catalog and custom manufacturing."
+                            : "Namaste Kamakhya Trading Co! I want to discuss bulk wholesale catalog and pricing."
                         )}`}
                         target="_blank"
                         rel="noreferrer"
@@ -501,7 +503,7 @@ export default function AiChatbot({
                 <span className="w-1.5 h-1.5 rounded-full bg-stone-400 animate-pulse [animation-delay:0.2s]"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-stone-400 animate-pulse [animation-delay:0.4s]"></span>
                 <span className="text-[11px] font-medium text-stone-500">
-                  {isVercel ? "Finding matching designs..." : "Retrieving wholesale records..."}
+                  {retailMode ? "Finding matching designs..." : "Retrieving wholesale records..."}
                 </span>
               </div>
             )}
@@ -519,7 +521,7 @@ export default function AiChatbot({
               placeholder={
                 isListening
                   ? "Listening... Speak now"
-                  : isVercel
+                  : retailMode
                   ? "Ask about sizing, fabric or delivery..."
                   : "Ask about MOQ, fabric or pricing..."
               }
