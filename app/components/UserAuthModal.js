@@ -89,16 +89,17 @@ export default function UserAuthModal({
   if (!isOpen) return null;
 
   // Handle Login / Registration
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
     if (!buyerName || !phone) {
       alert("Please provide your name and WhatsApp phone number.");
       return;
     }
+    const cleanPhone = phone.replace(/\D/g, '');
     const user = {
       name: buyerName,
       shop: shopName || 'Retail Store',
-      phone: phone.replace(/\D/g, ''),
+      phone: cleanPhone,
       city: city || 'India',
       registeredAt: new Date().toISOString()
     };
@@ -107,6 +108,18 @@ export default function UserAuthModal({
       localStorage.setItem('ktc_buyer_user', JSON.stringify(user));
       window.dispatchEvent(new Event('storage'));
     } catch {}
+
+    // Persist to Cloud Database (Supabase)
+    try {
+      await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user)
+      });
+    } catch (err) {
+      console.warn('Customer cloud database save note:', err);
+    }
+
     setActiveTab('restock');
   };
 

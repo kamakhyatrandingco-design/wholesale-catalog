@@ -1,177 +1,173 @@
 'use client';
 
-export default function CustomersView() {
-  const customerGroups = [
-    {
-      id: 'grp_retail_boutiques',
-      name: 'Retail Boutiques',
-      tier: 'Standard Wholesale Tier',
-      payment_terms: 'Advance / COD',
-      members_count: 142,
-      min_quarterly_spend: '₹50,000'
-    },
-    {
-      id: 'grp_gold_wholesalers',
-      name: 'Gold Wholesale Buyers',
-      tier: 'Boutique Gold Network (8% Off)',
-      payment_terms: '50% Advance, 50% on L/R',
-      members_count: 58,
-      min_quarterly_spend: '₹2,50,000'
-    },
-    {
-      id: 'grp_diamond_distributors',
-      name: 'Diamond State Distributors',
-      tier: 'Diamond Mega-Distributor (15% Off)',
-      payment_terms: 'Net 30 Days Credit',
-      members_count: 19,
-      min_quarterly_spend: '₹10,000,000'
-    }
-  ];
+import { useState, useEffect } from 'react';
 
-  const customers = [
-    {
-      id: 'cust_01',
-      company_name: 'Vogue Boutique Jaipur',
-      contact_person: 'Pooja Sharma',
-      phone: '+91 98290 12345',
-      city: 'Jaipur, Rajasthan',
-      gstin: '08ABCDE1234F1Z5',
-      group_name: 'Gold Wholesale Buyers',
-      credit_limit: 250000,
-      total_orders_placed: 14,
-      lifetime_value: 840000,
-      status: 'verified'
-    },
-    {
-      id: 'cust_02',
-      company_name: 'Surat Textiles Wholesale Hub',
-      contact_person: 'Rajesh Patel',
-      phone: '+91 98795 67890',
-      city: 'Surat, Gujarat',
-      gstin: '24AABCS9876G1Z2',
-      group_name: 'Diamond State Distributors',
-      credit_limit: 1000000,
-      total_orders_placed: 29,
-      lifetime_value: 3450000,
-      status: 'verified'
-    },
-    {
-      id: 'cust_03',
-      company_name: 'Guwahati Ethnic Emporium',
-      contact_person: 'Ananya Barua',
-      phone: '+91 94350 44556',
-      city: 'Guwahati, Assam',
-      gstin: '18AAEFG5566H1Z9',
-      group_name: 'Retail Boutiques',
-      credit_limit: 100000,
-      total_orders_placed: 6,
-      lifetime_value: 195000,
-      status: 'verified'
-    },
-    {
-      id: 'cust_04',
-      company_name: 'Chandni Chowk Saree Palace',
-      contact_person: 'Amit Gupta',
-      phone: '+91 98110 54321',
-      city: 'Delhi, NCR',
-      gstin: '07AAACR1234A1ZA',
-      group_name: 'Gold Wholesale Buyers',
-      credit_limit: 500000,
-      total_orders_placed: 19,
-      lifetime_value: 1420000,
-      status: 'verified'
+export default function CustomersView() {
+  const [customers, setCustomers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/customers');
+      if (res.ok) {
+        const data = await res.json();
+        setCustomers(data.customers || []);
+      }
+    } catch (err) {
+      console.warn('Failed to load customers:', err);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
+
+  const filteredCustomers = customers.filter(c => {
+    const q = searchQuery.toLowerCase();
+    return !q ||
+      (c.name || '').toLowerCase().includes(q) ||
+      (c.business_name || '').toLowerCase().includes(q) ||
+      (c.phone || '').includes(q) ||
+      (c.city || '').toLowerCase().includes(q);
+  });
 
   return (
     <div className="space-y-6">
-      {/* 1. Customer Groups Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {customerGroups.map(grp => (
-          <div key={grp.id} className="bg-[#0b0f17] border border-zinc-800/80 rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-amber-400 font-semibold border border-zinc-700/60">
-                {grp.members_count} Boutiques
-              </span>
-              <span className="text-xs text-zinc-500 font-mono">B2B Group</span>
-            </div>
-            <div className="font-bold text-white text-sm mt-2">{grp.name}</div>
-            <div className="text-xs text-zinc-400 mt-1">Tier: {grp.tier}</div>
-            <div className="text-[10px] font-mono text-zinc-500 mt-2">
-              Credit Terms: {grp.payment_terms}
-            </div>
+      {/* 1. Metric Highlights */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-[#0b0f17] border border-zinc-800/80 rounded-xl p-4">
+          <div className="text-[11px] font-mono text-zinc-400">TOTAL REGISTERED CUSTOMERS</div>
+          <div className="text-2xl font-bold text-white mt-1">{customers.length}</div>
+          <div className="text-[10px] text-emerald-400 mt-1 flex items-center gap-1">
+            <span>●</span> Synced with Supabase Cloud DB
           </div>
-        ))}
+        </div>
+
+        <div className="bg-[#0b0f17] border border-zinc-800/80 rounded-xl p-4">
+          <div className="text-[11px] font-mono text-zinc-400">RETAIL BUYERS</div>
+          <div className="text-2xl font-bold text-white mt-1">
+            {customers.filter(c => c.account_type !== 'wholesale').length}
+          </div>
+          <div className="text-[10px] text-zinc-400 mt-1">From ktcfashion.netlify.app</div>
+        </div>
+
+        <div className="bg-[#0b0f17] border border-zinc-800/80 rounded-xl p-4">
+          <div className="text-[11px] font-mono text-zinc-400">WHOLESALE BOUTIQUES</div>
+          <div className="text-2xl font-bold text-white mt-1">
+            {customers.filter(c => c.account_type === 'wholesale').length}
+          </div>
+          <div className="text-[10px] text-zinc-400 mt-1">From wholesale-catalog-ktc8.vercel.app</div>
+        </div>
       </div>
 
-      {/* 2. Customer Accounts Registry Table */}
+      {/* 2. Customer Directory Table */}
       <div className="bg-[#0b0f17] border border-zinc-800/80 rounded-xl overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
+        <div className="p-4 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-white">B2B Buyer Accounts & GSTIN Directory</h3>
-            <p className="text-xs text-zinc-400">Verified boutique buyers, state-level stockists & credit terms</p>
+            <h3 className="text-sm font-bold text-white">Live Customer Registrations</h3>
+            <p className="text-xs text-zinc-400">Real-time buyer sign-up details stored persistently in database</p>
           </div>
-          <span className="text-xs font-mono text-zinc-400 bg-zinc-900 px-2.5 py-1 rounded border border-zinc-800">
-            {customers.length} Active Key Accounts
-          </span>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name, phone, city..."
+              className="bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 px-3 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700 w-48 sm:w-64"
+            />
+            <button
+              onClick={fetchCustomers}
+              disabled={isLoading}
+              className="px-2.5 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition-colors"
+            >
+              ↻ Refresh
+            </button>
+          </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-zinc-900/60 border-b border-zinc-800 text-[10px] font-mono font-semibold uppercase text-zinc-400 tracking-wider">
-              <tr>
-                <th className="py-3 px-4">Boutique / Store Name</th>
-                <th className="py-3 px-4">Contact Person</th>
-                <th className="py-3 px-4">City & GSTIN</th>
-                <th className="py-3 px-4">Customer Group</th>
-                <th className="py-3 px-4">Credit Limit</th>
-                <th className="py-3 px-4">Lifetime Orders</th>
-                <th className="py-3 px-4 text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/60 text-zinc-300">
-              {customers.map(c => (
-                <tr key={c.id} className="hover:bg-zinc-900/50 transition-colors">
-                  <td className="py-3 px-4">
-                    <div className="font-bold text-zinc-100">{c.company_name}</div>
-                    <div className="text-[10px] text-zinc-500 font-mono">ID: {c.id}</div>
-                  </td>
-
-                  <td className="py-3 px-4">
-                    <div className="text-zinc-200">{c.contact_person}</div>
-                    <div className="text-[10px] text-zinc-400 font-mono">{c.phone}</div>
-                  </td>
-
-                  <td className="py-3 px-4">
-                    <div className="text-zinc-300">{c.city}</div>
-                    <div className="text-[10px] font-mono text-amber-400/90">{c.gstin}</div>
-                  </td>
-
-                  <td className="py-3 px-4">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
-                      {c.group_name}
-                    </span>
-                  </td>
-
-                  <td className="py-3 px-4 font-mono font-bold text-zinc-200">
-                    ₹{c.credit_limit.toLocaleString('en-IN')}
-                  </td>
-
-                  <td className="py-3 px-4 font-mono">
-                    <div className="text-white font-bold">₹{c.lifetime_value.toLocaleString('en-IN')}</div>
-                    <div className="text-[10px] text-zinc-500">{c.total_orders_placed} bulk consignments</div>
-                  </td>
-
-                  <td className="py-3 px-4 text-right">
-                    <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-800/40 uppercase">
-                      ● {c.status}
-                    </span>
-                  </td>
+        {isLoading ? (
+          <div className="p-12 text-center text-xs text-zinc-500 font-mono">
+            Loading registered customers from database...
+          </div>
+        ) : filteredCustomers.length === 0 ? (
+          <div className="p-12 text-center space-y-2">
+            <div className="text-zinc-400 text-sm font-medium">No Customer Registrations Found</div>
+            <p className="text-zinc-500 text-xs max-w-md mx-auto">
+              When buyers sign up or request restocks on the storefront, their name, phone number, and store details will be stored in Supabase and displayed here.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-zinc-900/60 border-b border-zinc-800 text-[10px] font-mono font-semibold uppercase text-zinc-400 tracking-wider">
+                <tr>
+                  <th className="py-3 px-4">Customer / Buyer</th>
+                  <th className="py-3 px-4">Shop / Business</th>
+                  <th className="py-3 px-4">WhatsApp / Phone</th>
+                  <th className="py-3 px-4">Location</th>
+                  <th className="py-3 px-4">Channel</th>
+                  <th className="py-3 px-4">Registered Date</th>
+                  <th className="py-3 px-4 text-right">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/60 text-zinc-300">
+                {filteredCustomers.map((c, idx) => (
+                  <tr key={c.id || idx} className="hover:bg-zinc-900/50 transition-colors">
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-zinc-100">{c.name}</div>
+                      <div className="text-[10px] text-zinc-500 font-mono">ID: {c.id}</div>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <div className="text-zinc-200">{c.business_name || 'Retail Buyer'}</div>
+                      {c.gstin && <div className="text-[10px] font-mono text-amber-400/90">GSTIN: {c.gstin}</div>}
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <div className="font-mono text-zinc-200 font-semibold">{c.phone}</div>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <div className="text-zinc-300">{c.city || 'India'}</div>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-medium ${
+                        c.account_type === 'wholesale'
+                          ? 'bg-amber-950/60 text-amber-300 border border-amber-800/40'
+                          : 'bg-teal-950/60 text-teal-300 border border-teal-800/40'
+                      }`}>
+                        {c.account_type === 'wholesale' ? 'Wholesale B2B' : 'Retail'}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-4 text-zinc-400 text-[11px] font-mono">
+                      {c.created_at ? new Date(c.created_at).toLocaleDateString('en-IN') : 'Recent'}
+                    </td>
+
+                    <td className="py-3 px-4 text-right">
+                      {c.phone && (
+                        <a
+                          href={`https://api.whatsapp.com/send?phone=91${String(c.phone).replace(/\D/g, '')}&text=${encodeURIComponent(`Namaste ${c.name}, greetings from Kamakhya Trading Co! Thank you for registering with us.`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-sans px-2.5 py-1 rounded bg-emerald-950/80 text-emerald-300 hover:bg-emerald-900 border border-emerald-800/60 transition-colors"
+                        >
+                          WhatsApp ↗
+                        </a>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -10,11 +10,9 @@
  * 
  * When database is connected:
  *  - Real-time cloud persistence for products across all devices & serverless cold starts.
- *  - Admin portal can add, update, and delete products without read-only filesystem issues.
+ *  - Real-time customer registration and sign-up storage.
+ *  - Real-time wholesale quotation and inquiry tracking.
  *  - Free tier: 100% free forever (500MB+ storage, 50,000+ monthly requests).
- * 
- * When database is not configured yet:
- *  - Graceful fallback to bundled catalog (1 demo product) with zero errors.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -260,13 +258,13 @@ export async function saveDbInquiry(inquiry) {
   const payload = {
     id: inquiry.id || `inq_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     customer_name: inquiry.customer_name || inquiry.name || 'Anonymous Merchant',
-    business_name: inquiry.business_name || '',
+    business_name: inquiry.business_name || inquiry.shop || '',
     phone: inquiry.phone || '',
     gstin: inquiry.gstin || '',
     purchase_mode: inquiry.purchase_mode || 'wholesale',
     items: inquiry.items || [],
     notes: inquiry.notes || '',
-    status: 'pending',
+    status: inquiry.status || 'pending',
     created_at: new Date().toISOString()
   };
 
@@ -302,4 +300,137 @@ export async function saveDbInquiry(inquiry) {
   }
 
   return payload;
+}
+
+export async function getDbInquiries() {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('inquiries')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('[DB:Supabase] Inquiries fetch error:', error.message);
+        return [];
+      }
+      return data || [];
+    } catch (err) {
+      console.warn('[DB:Supabase] Error:', err.message);
+      return [];
+    }
+  }
+
+  if (neonSql) {
+    try {
+      const rows = await neonSql`SELECT * FROM inquiries ORDER BY created_at DESC;`;
+      return rows || [];
+    } catch (err) {
+      console.warn('[DB:Neon] Inquiries fetch error:', err.message);
+      return [];
+    }
+  }
+
+  return [];
+}
+
+// 6. Customer Registration & Sign-Up Persistence
+export async function saveDbCustomer(customer) {
+  const cleanPhone = String(customer.phone || '').replace(/\D/g, '');
+  const id = customer.id || `cust_${cleanPhone || Date.now()}`;
+
+  const payload = {
+    id,
+    name: customer.name || customer.buyerName || 'Valued Customer',
+    business_name: customer.business_name || customer.shop || customer.shopName || '',
+    phone: cleanPhone || customer.phone || '',
+    email: customer.email || '',
+    city: customer.city || 'India',
+    state: customer.state || '',
+    pincode: customer.pincode || '',
+    gstin: customer.gstin || '',
+    account_type: customer.account_type || 'retail',
+    updated_at: new Date().toISOString()
+  };
+
+  if (supabaseClient) {
+    // 1. Try saving into dedicated 'customers' table
+    try {
+      const { data, error } = await supabaseClient
+        .from('customers')
+        .upsert({ ...payload, created_at: new Date().toISOString() }, { onConflict: 'id' })
+        .select()
+        .single();
+
+      if (!error && data) {
+        return data;
+      }
+    } catch (err) {
+      console.warn('[DB:Supabase] customers table write attempt note:', err.message);
+    }
+
+    // 2. Fallback: Also persist customer record into 'inquiries' as a registered sign-up
+    try {
+      await saveDbInquiry({
+        id: `reg_${id}`,
+        customer_name: payload.name,
+        business_name: payload.business_name,
+        phone: payload.phone,
+        gstin: payload.gstin,
+        purchase_mode: 'customer_signup',
+        notes: `Customer registered from ${payload.city}`,
+        status: 'registered'
+      });
+    } catch {}
+
+    return payload;
+  }
+
+  return payload;
+}
+
+export async function getDbCustomers() {
+  if (supabaseClient) {
+    // 1. Try dedicated 'customers' table
+    try {
+      const { data, error } = await supabaseClient
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        return data;
+      }
+    } catch {}
+
+    // 2. Fallback: Extract registered customers from 'inquiries' table
+    try {
+      const { data, error } = await supabaseClient
+        .from('inquiries')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && Array.isArray(data)) {
+        const customerMap = new Map();
+        data.forEach(inq => {
+          const key = inq.phone || inq.customer_name;
+          if (key && !customerMap.has(key)) {
+            customerMap.set(key, {
+              id: inq.id,
+              name: inq.customer_name,
+              business_name: inq.business_name || '',
+              phone: inq.phone,
+              city: inq.city || 'India',
+              gstin: inq.gstin || '',
+              account_type: inq.purchase_mode === 'wholesale' ? 'wholesale' : 'retail',
+              created_at: inq.created_at
+            });
+          }
+        });
+        return Array.from(customerMap.values());
+      }
+    } catch {}
+  }
+
+  return [];
 }

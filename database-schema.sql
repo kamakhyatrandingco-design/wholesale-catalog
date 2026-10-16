@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS products (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Index for fast lookup by category and slug
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
 
@@ -42,7 +41,25 @@ CREATE TABLE IF NOT EXISTS inquiries (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. Seed Initial Demo Product (Only 1 real demo item, no fake mill claims)
+-- 3. Customer Sign-ups & Buyer Directory Table
+CREATE TABLE IF NOT EXISTS customers (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    business_name TEXT,
+    phone TEXT NOT NULL,
+    email TEXT,
+    city TEXT,
+    state TEXT,
+    pincode TEXT,
+    gstin TEXT,
+    account_type TEXT DEFAULT 'retail',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
+
+-- 4. Seed Initial Demo Product (Only 1 real demo item, no fake mill claims)
 INSERT INTO products (
     id,
     slug,
@@ -86,18 +103,25 @@ INSERT INTO products (
     wholesale_price = EXCLUDED.wholesale_price,
     moq = EXCLUDED.moq;
 
--- 4. Enable Row Level Security (RLS) & Allow Clean API Access
+-- 5. Enable Row Level Security (RLS) & Allow Clean API Access
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE inquiries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 
--- Products Policies: Allow public read, and allow all authenticated/anon API operations
+-- Products Policies
 DROP POLICY IF EXISTS "Public read products" ON products;
 DROP POLICY IF EXISTS "Full access products" ON products;
 CREATE POLICY "Public read products" ON products FOR SELECT USING (true);
 CREATE POLICY "Full access products" ON products FOR ALL USING (true);
 
--- Inquiries Policies: Allow anyone to insert, and allow admin to read
+-- Inquiries Policies
 DROP POLICY IF EXISTS "Public insert inquiries" ON inquiries;
 DROP POLICY IF EXISTS "Full access inquiries" ON inquiries;
 CREATE POLICY "Public insert inquiries" ON inquiries FOR INSERT WITH CHECK (true);
 CREATE POLICY "Full access inquiries" ON inquiries FOR ALL USING (true);
+
+-- Customers Policies
+DROP POLICY IF EXISTS "Public read customers" ON customers;
+DROP POLICY IF EXISTS "Full access customers" ON customers;
+CREATE POLICY "Public read customers" ON customers FOR SELECT USING (true);
+CREATE POLICY "Full access customers" ON customers FOR ALL USING (true);

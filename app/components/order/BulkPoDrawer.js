@@ -74,6 +74,20 @@ export default function BulkPoDrawer({
 
   const handleSendMasterPO = () => {
     const text = generateMasterPOText();
+
+    // Persist inquiry & order draft to cloud database
+    try {
+      fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          purchase_mode: retailMode ? 'retail' : 'wholesale',
+          items: items.map(it => ({ title: it.title, sku: it.sku, color: it.color, size: it.size, quantity: it.quantity, price: it.price })),
+          notes: `Master PO with ${totalPieces} pcs totaling ₹${totalAmount}`
+        })
+      }).catch(() => {});
+    } catch {}
+
     window.open(`https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   };
 
